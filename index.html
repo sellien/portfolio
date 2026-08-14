@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>김영욱 — 다지점 운영관리 · 업무 자동화</title>
+<style>html,body{margin:0;padding:0}*,*::before,*::after{box-sizing:border-box}img,svg{max-width:100%}</style>
+</head>
+<body>
+<title>김영욱 — 다지점 운영관리 · 업무 자동화</title>
+<style>
+  :root{
+    --pine:#24544a; --pine-soft:#3a6f63; --gold:#93702f;
+    --ground:#ffffff; --card:#ffffff; --ink:#1c1a17; --sub:#5c574e;
+    --line:#e7e7e4; --shadow:0 1px 3px rgba(36,84,74,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --pine:#7db8a8; --pine-soft:#5d9b8b; --gold:#d3aa62;
+      --ground:#141615; --card:#1c201e; --ink:#ece8e0; --sub:#9d978b;
+      --line:#2e332f; --shadow:0 1px 3px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --pine:#7db8a8; --pine-soft:#5d9b8b; --gold:#d3aa62;
+    --ground:#141615; --card:#1c201e; --ink:#ece8e0; --sub:#9d978b;
+    --line:#2e332f; --shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+  :root[data-theme="light"]{
+    --pine:#24544a; --pine-soft:#3a6f63; --gold:#93702f;
+    --ground:#ffffff; --card:#ffffff; --ink:#1c1a17; --sub:#5c574e;
+    --line:#e7e7e4; --shadow:0 1px 3px rgba(36,84,74,.07);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.72; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding:64px 26px 80px; display:flex; flex-direction:column; gap:52px}
+
+  header{display:flex; flex-direction:column; gap:14px}
+  .eyebrow{
+    font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--gold); font-weight:700;
+  }
+  h1{margin:0; font-size:34px; line-height:1.25; letter-spacing:-.025em; text-wrap:balance}
+  h1 span{color:var(--pine)}
+  .lede{margin:0; font-size:17px; color:var(--sub); max-width:60ch}
+
+  .stats{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:3px; overflow:hidden;
+  }
+  .stat{background:var(--card); padding:15px 16px}
+  .stat b{display:block; font-size:21px; color:var(--pine); font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+  .stat span{font-size:11.5px; color:var(--sub)}
+
+  section{display:flex; flex-direction:column; gap:16px}
+  h2{
+    margin:0; font-size:13px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--sub); font-weight:700; padding-bottom:9px; border-bottom:1px solid var(--line);
+  }
+
+  .work{display:flex; flex-direction:column; gap:12px}
+  a.item{
+    display:block; text-decoration:none; color:inherit; background:var(--card);
+    border:1px solid var(--line); border-left:3px solid var(--pine);
+    padding:16px 18px; border-radius:3px; box-shadow:var(--shadow);
+    transition:border-left-color .15s, transform .15s;
+  }
+  a.item:hover, a.item:focus-visible{border-left-color:var(--gold); transform:translateX(2px)}
+  a.item:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+  .item h3{margin:0 0 4px; font-size:16px; letter-spacing:-.01em}
+  .item p{margin:0; font-size:13.5px; color:var(--sub)}
+  .item .go{font-size:12px; color:var(--pine); font-weight:600; margin-top:7px; display:block}
+
+  a.deep{
+    display:flex; align-items:baseline; gap:10px 14px; flex-wrap:wrap;
+    text-decoration:none; color:inherit; background:var(--card);
+    border:1px solid var(--line); border-left:3px solid var(--gold);
+    padding:15px 18px; border-radius:3px; box-shadow:var(--shadow);
+    transition:transform .15s;
+  }
+  a.deep:hover, a.deep:focus-visible{transform:translateX(2px)}
+  a.deep:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+  a.deep b{font-size:15.5px; letter-spacing:-.01em}
+  a.deep span{font-size:13.5px; color:var(--sub); flex:1; min-width:15em}
+  a.deep em{font-style:normal; font-size:12px; color:var(--gold); font-weight:700; white-space:nowrap}
+
+  .case{background:var(--card); border:1px solid var(--line); border-radius:3px; padding:16px 18px; box-shadow:var(--shadow)}
+  .case h3{margin:0 0 6px; font-size:15px; color:var(--pine); letter-spacing:-.01em}
+  .case p{margin:0; font-size:14px; color:var(--sub)}
+  .case p b{color:var(--ink)}
+
+  .tl{display:flex; flex-direction:column; gap:0; font-size:14px}
+  .tl div{display:flex; gap:14px; padding:9px 0; border-bottom:1px solid var(--line)}
+  .tl div:last-child{border-bottom:none}
+  .tl time{color:var(--sub); font-size:12.5px; white-space:nowrap; min-width:118px; font-variant-numeric:tabular-nums; padding-top:2px}
+  .tl b{font-weight:600}
+  .tl em{font-style:normal; color:var(--sub); font-size:13px; display:block}
+  /* 한 회사 안의 직책 이동을 회사명 아래로 묶는다.
+     회사명이 없으면 여섯 자리가 서로 다른 회사로 읽힌다. 2026-08-10 */
+  .tl .co{display:flex; gap:10px; align-items:baseline; padding:0 0 8px; border-bottom:1px solid var(--line)}
+  .tl .co b{font-size:15px; color:var(--pine); font-weight:700}
+  .tl .co span{font-size:12.5px; color:var(--sub)}
+  .tl .role{padding-left:14px}
+
+  footer{
+    border-top:1px solid var(--line); padding-top:22px;
+    font-size:13.5px; color:var(--sub); display:flex; flex-direction:column; gap:8px;
+  }
+  footer b{color:var(--ink)}
+  .note{font-size:12px; opacity:.8}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+
+  /* ─── 가독성 (2026-08-14) ─── */
+  body { font-size: 16.5px; line-height: 1.78; word-break: keep-all; overflow-wrap: break-word; }
+  h1, h2, h3, h4, p, li, dd, dt, td, th, em, span, summary, time, b { word-break: keep-all; overflow-wrap: break-word; }
+  @media print { body { font-size: 13.8px; line-height: 1.62; } }
+
+  /* ─── 타이포 위계 (2026-08-14, 02와 동일 방향) ─── */
+  h1{ font-size:clamp(29px,7vw,40px); }
+  @media print{ h1{ font-size:28px; } }
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">다지점 운영관리 · 운영기획 · 업무 자동화</div>
+  <h1>여러 사업장을 <span>숫자로 관리</span>하고,<br>반복되는 일은 <span>도구로 만듭니다</span></h1>
+  <p class="lede">
+    서비스업 11년 10개월, 그중 약 7년을 현장 운영과 행정에 썼습니다. 지금은 직영 7개 사업장 운영을 총괄하고, 개발자가 아니지만 업무 툴을 직접 만들어 씁니다.
+  </p>
+</header>
+
+<div class="stats">
+  <div class="stat"><b>7</b><span>관리 사업장</span></div>
+  <div class="stat"><b>3,800</b><span>이용자(명)</span></div>
+  <div class="stat"><b>A등급</b><span>2023 기관평가</span></div>
+  <div class="stat"><b>9종</b><span>직접 만든 업무 툴</span></div>
+</div>
+
+<a class="deep" href="https://claude.ai/code/artifact/6b8d9690-2e38-4c20-91d2-84f2da9b0c07">
+  <b>작업 기록 전체 보기</b>
+  <span>7개 사업장의 운영과 업무 툴 9종을 상황 → 만든 것 → 결과 순으로 정리했습니다.</span>
+  <em>포트폴리오 →</em>
+</a>
+
+<section>
+  <h2>만든 것 — 직접 확인하실 수 있습니다</h2>
+  <div class="work">
+    <a class="item" href="https://claude.ai/code/artifact/feced777-ecef-433d-9788-556740b12679">
+      <h3>기관 마진 계산기</h3>
+      <p>2026년 고시 수가 기준으로 매출·인건비·마진율과 손익분기 시급을 산정합니다.</p>
+      <span class="go">열어보기 →</span>
+    </a>
+    <a class="item" href="https://claude.ai/code/artifact/ed7552bd-c927-4bc7-a498-7fb57785d55e">
+      <h3>상근직 근무시간 · 가산인원 계산기</h3>
+      <p>고시 제49·51조 산식으로 근무시간 충족과 기관 단위 가산 인원을 판정합니다. 법정 산식과 기관별 기준을 층으로 분리해 기본값은 고시만 적용합니다.</p>
+      <span class="go">열어보기 →</span>
+    </a>
+  </div>
+  <p class="note">둘 다 공개 고시·수가표만 근거로 만들었고, 브라우저 안에서만 계산됩니다.</p>
+</section>
+
+<section id="방법">
+  <h2>일하는 방식</h2>
+
+  <div class="case">
+    <h3>기준을 먼저 만들고 사람을 붙입니다</h3>
+    <p>프로세스가 없던 사업장을 맡아 <b>평가 기준을 운영 체계의 설계도로</b> 썼습니다. 계약·재고·상담·행정을 반복 가능한 절차로 만들고 평가 항목을 일상 업무에 미리 심었습니다. 결과는 <b>2023년 기관평가 A등급</b>.</p>
+  </div>
+
+  <div class="case">
+    <h3>문제가 터진 뒤 가지 않습니다</h3>
+    <p>한 사람이 7개 사업장을 매일 볼 수는 없습니다. 그래서 <b>어떤 신호를 언제 보는지</b>를 먼저 정하고, 정기 점검에서 기준을 벗어난 곳에 직접 들어가 원인을 제거합니다. 핵심은 현장 감각이 아니라 그 정의였습니다.</p>
+  </div>
+
+  <div class="case">
+    <h3>도구보다 가드를 먼저 만듭니다</h3>
+    <p>업무 데이터를 다루는 도구는 한 번 잘못 돌면 되돌릴 수 없습니다. 그래서 만들기 전에 네 가지를 정합니다 — <b>쓰기 가능 범위, 개인정보 마스킹, 출처 표시, 외부 전송 금지.</b> 오류가 나면 재발 방지까지 기록해 규칙으로 승격시킵니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2>경력</h2>
+  <div class="tl">
+    <div class="co"><b>케어링</b><span>2021.11 – 현재 · 5개 직책</span></div>
+    <div class="role"><time>2025.03 – 현재</time><span><b>본부관리팀장</b><em>직영 7개 사업장·이용자 약 3,800명 운영 총괄. 실적 점검, 부진 사업장 개입, 채용·평가, 본사–현장 조율</em></span></div>
+    <div class="role"><time>2024.07 – 2025.03</time><span><b>교육사업팀장</b><em>외국인 인력 양성 신사업 기획. 국내 대학·해외 파트너와 협약</em></span></div>
+    <div class="role"><time>2024.02 – 2024.06</time><span><b>복지용구팀장</b><em>서울·부산 2개 사업장 운영 총괄. 인력 관리 및 매출 데이터 분석</em></span></div>
+    <div class="role"><time>2022.03 – 2024.02</time><span><b>복지용구센터장</b><em>사업장 운영 전반 총괄. 제로베이스에서 운영 체계 구축 → 2023 기관평가 A등급</em></span></div>
+    <div class="role"><time>2021.11 – 2022.02</time><span><b>계약팀 매니저</b><em>서비스 이용 계약 전담</em></span></div>
+    <div><time>2018.03 – 2020.03</time><span><b>연희시니어스 요양원 · 사회복지행정</b><em>국민건강보험공단 주관·연세대 산학 국책 시범사업 행정 총괄. 서비스 우수사례 공모전 동상(2019)</em></span></div>
+  </div>
+  <p class="note">※ 재직 중인 회사는 2021년 연매출 113억에서 2025년 1,658억이 되었습니다(공개 실적 기준).</p>
+</section>
+
+<footer>
+  <div><b>김영욱</b> · 사회복지사 2급 · 명지전문대학 사회복지학과</div>
+  <p class="note">이 페이지에는 재직 중인 회사의 내부 자료·시스템·미공개 지표가 없습니다.</p>
+</footer>
+
+</div>
+
+</body>
+</html>

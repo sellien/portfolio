@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>가산 사회복지사 근무시간 계산기</title>
+<style>html,body{margin:0;padding:0}*,*::before,*::after{box-sizing:border-box}img,svg{max-width:100%}</style>
+</head>
+<body>
+
+<title>가산 사회복지사 근무시간 계산기</title>
+<style>
+  :root{
+    --blue-bg:#dbeafe; --blue-text:#1e40af;
+    --yellow-bg:#fef9c3; --yellow-text:#854d0e;
+    --gray-bg:#e5e7eb; --gray-text:#374151;
+    --red-bg:#fee2e2; --red-text:#b91c1c;
+    --line:#d1d5db;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,-apple-system,sans-serif;
+    background:#ffffff; color:#111827; margin:0; padding:24px; line-height:1.5;
+  }
+  .wrap{max-width:1500px; margin:0 auto;}
+  h1{font-size:20px; margin:0 0 4px;}
+  .subtitle{color:#6b7280; font-size:13px; margin:0 0 16px;}
+  .banner{border-radius:8px; padding:10px 14px; margin-bottom:10px; font-size:13px; border:1px solid transparent;}
+  .banner-warn{background:#fffbeb; border-color:#fcd34d; color:#92400e;}
+  .banner-info{background:#eff6ff; border-color:#93c5fd; color:#1e3a8a;}
+  section{background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:14px;}
+  section h2{font-size:15px; margin:0 0 10px;}
+  .row{display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end;}
+  .field{display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:12px; color:#374151; font-weight:600;}
+  input[type="month"], input[type="date"], input[type="text"], input[type="number"], select{
+    border:1px solid var(--line); border-radius:6px; padding:6px 8px; font-size:13px; font-family:inherit;
+  }
+  input[type="number"]{width:90px;}
+  .toggle-row{display:flex; align-items:center; gap:8px; font-size:13px;}
+  .toggle-row input{width:16px; height:16px;}
+  #holidayContainer{display:flex; flex-wrap:wrap; gap:8px; margin:8px 0;}
+  .holiday-row{display:flex; align-items:center; gap:4px;}
+  .holiday-row input.invalid{border-color:#dc2626; background:#fee2e2;}
+  .btn{border:1px solid var(--line); background:#fff; border-radius:6px; padding:6px 12px; font-size:13px; cursor:pointer;}
+  .btn:hover{background:#f3f4f6;}
+  .btn-primary{background:#1d4ed8; color:#fff; border-color:#1d4ed8;}
+  .btn-primary:hover{background:#1e40af;}
+  .btn-remove{background:#fff; color:#b91c1c; border-color:#fca5a5; padding:4px 8px; font-size:12px;}
+  .btn-remove:hover{background:#fee2e2;}
+  #baseHoursNote{font-size:12px; color:#6b7280; margin-top:4px;}
+  #baseHoursValue{font-size:22px; font-weight:700; color:#111827;}
+  .table-scroll{overflow-x:auto;}
+  table{border-collapse:collapse; width:100%; min-width:1350px; font-size:13px;}
+  th, td{border:1px solid var(--line); padding:6px 8px; text-align:center; vertical-align:top;}
+  th{background:#f9fafb; font-size:12px; white-space:nowrap;}
+  td input[type="text"]{width:80px;}
+  td input[type="number"]{width:75px;}
+  .maternity-cell{display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .multiple-label{font-size:11px; color:#374151; display:flex; align-items:center; gap:3px; white-space:nowrap;}
+  .multiple-label input{width:13px; height:13px;}
+  .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700;}
+  .badge-claim{background:var(--blue-bg); color:var(--blue-text);}
+  .badge-review{background:var(--yellow-bg); color:var(--yellow-text);}
+  .badge-exclude{background:var(--gray-bg); color:var(--gray-text);}
+  .badge-error{background:var(--red-bg); color:var(--red-text);}
+  .badge-insufficient{background:#f3f4f6; color:#6b7280;}
+  .row-msg{font-size:11px; color:#b91c1c; margin-top:4px;}
+  .row-warn{font-size:11px; color:#92400e; margin-top:4px;}
+  .diff-positive{color:#1d4ed8; font-weight:600;}
+  .diff-negative{color:#b91c1c; font-weight:600;}
+  .review-block{margin-top:6px; display:flex; flex-direction:column; gap:4px; align-items:stretch; min-width:170px;}
+  .clawback-warning{font-size:11px; color:#b91c1c; font-weight:600; text-align:left;}
+  .manual-decision, .manual-remark{font-size:11px; padding:4px 6px;}
+  .manual-remark.invalid{border-color:#dc2626; background:#fee2e2;}
+  .remark-msg{font-size:10px; color:#b91c1c; text-align:left; min-height:12px;}
+  #globalMessages{display:none; font-size:13px; color:#b91c1c; background:#fee2e2; border:1px solid #fca5a5; border-radius:6px; padding:8px 12px; margin-bottom:10px;}
+  #globalMessages.show{display:block;}
+  .summary-cards{display:flex; gap:12px; flex-wrap:wrap;}
+  .summary-card{flex:1; min-width:160px; background:#f9fafb; border:1px solid var(--line); border-radius:8px; padding:12px 14px;}
+  .summary-card .label{font-size:12px; color:#6b7280; margin-bottom:4px;}
+  .summary-card .value{font-size:20px; font-weight:700; color:#111827;}
+  footer{font-size:11px; color:#9ca3af; text-align:center; margin-top:10px;}
+  .note{font-size:11px; color:#6b7280; margin-top:8px;}
+  .retire-detail-row td{text-align:left; background:#f9fafb;}
+  .retire-detail{display:flex; flex-direction:column; gap:8px; padding:6px 4px; max-width:820px;}
+  .retire-guidance-text{font-size:12px; color:#374151; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:8px 10px;}
+  .retire-warning{font-size:12px; color:#b91c1c; font-weight:700;}
+  .retire-reference-box{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; background:#ede9fe; border:1px solid #c4b5fd; border-radius:6px; padding:8px 10px;}
+  .retire-reference-label{font-size:12px; color:#5b21b6; font-weight:600;}
+  .out-retire-reference{font-size:16px; font-weight:700; color:#5b21b6;}
+  .retire-reference-note{font-size:11px; color:#5b21b6; flex-basis:100%;}
+</style>
+<style>
+:root{
+  --pub-paper:#ffffff; --pub-card:#ffffff;
+  --pub-ink:#1c1a17;   --pub-sub:#5c574e;
+  --pub-line:#e7e7e4;  --pub-line2:#cfcfc9;
+  --pub-pine:#24544a;  --pub-pine-soft:#3a6f63;
+  --pub-gold:#93702f;  --pub-wash:#e6ede8;
+  --pub-sans:"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,-apple-system,sans-serif;
+  --pub-mono:ui-monospace,"SFMono-Regular","Cascadia Mono",Consolas,"D2Coding",monospace;
+
+  --blue-bg:#e6ede8;   --blue-text:#24544a;
+  --yellow-bg:#f3ecdc; --yellow-text:#7e5f27;
+  --gray-bg:#e8e4da;   --gray-text:#5c574e;
+  --red-bg:#f6e3df;    --red-text:#8f3a2c;
+  --line:#e7e7e4;
+  color-scheme: light;
+}
+
+html, body{
+  background:var(--pub-paper) !important;
+  color:var(--pub-ink) !important;
+  font-family:var(--pub-sans) !important;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.7;
+  padding:0 !important;
+}
+
+.wrap{ max-width:1420px !important; margin:0 auto !important; padding:52px 26px 40px !important; }
+
+h1{
+  font-size:31px !important; font-weight:800 !important; line-height:1.2 !important;
+  letter-spacing:-.025em !important; margin:0 0 12px !important; text-wrap:balance;
+}
+.subtitle{ font-size:15px !important; color:var(--pub-sub) !important; max-width:48em; margin:0 0 26px !important; }
+
+.banner{
+  border-radius:2px !important; padding:12px 16px !important;
+  font-size:13.5px !important; margin-bottom:12px !important; line-height:1.65;
+}
+.banner-warn{ background:#f7f1e4 !important; border-color:var(--pub-gold) !important; color:#6f5322 !important; }
+.banner-info{ background:var(--pub-wash) !important; border-color:var(--pub-pine-soft) !important; color:#1d453d !important; }
+
+section{
+  background:var(--pub-card) !important;
+  border:1px solid var(--pub-line) !important;
+  border-left:3px solid var(--pub-pine) !important;
+  border-radius:3px !important;
+  box-shadow:0 1px 3px rgba(36,84,74,.07) !important;
+  padding:22px 22px 24px !important;
+  margin-bottom:18px !important;
+}
+section h2{
+  font-size:13px !important; font-weight:700 !important;
+  font-family:var(--pub-mono) !important; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--pub-sub) !important;
+  padding-bottom:11px !important; margin:0 0 16px !important;
+  border-bottom:1px solid var(--pub-line) !important;
+}
+
+.field label, label{ color:var(--pub-sub) !important; font-size:12.5px !important; font-weight:600 !important; }
+input[type="month"], input[type="date"], input[type="text"], input[type="number"], select{
+  border:1px solid var(--pub-line2) !important; border-radius:2px !important;
+  background:#fff !important; color:var(--pub-ink) !important;
+  font-family:inherit !important; font-size:13px !important;
+  font-variant-numeric:tabular-nums;
+}
+input:focus, select:focus{
+  outline:2px solid var(--pub-pine) !important; outline-offset:1px;
+  border-color:var(--pub-pine) !important;
+}
+.toggle-row{ font-size:13px !important; color:var(--pub-ink) !important; }
+.toggle-row strong{ color:var(--pub-gold) !important; }
+
+.btn{
+  border:1px solid var(--pub-line2) !important; background:#fff !important;
+  border-radius:2px !important; font-family:inherit !important;
+  font-size:13px !important; color:var(--pub-ink) !important;
+}
+.btn:hover{ background:var(--pub-wash) !important; border-color:var(--pub-pine-soft) !important; }
+.btn-primary{ background:var(--pub-pine) !important; color:#fff !important; border-color:var(--pub-pine) !important; }
+.btn-primary:hover{ background:#1c453c !important; border-color:#1c453c !important; }
+.btn-remove{ color:#8f3a2c !important; border-color:#d9b8b0 !important; background:#fff !important; }
+.btn-remove:hover{ background:#f6e3df !important; }
+
+#baseHoursValue{ font-size:24px !important; color:var(--pub-pine) !important; font-variant-numeric:tabular-nums; }
+#baseHoursNote, .note{ color:var(--pub-sub) !important; font-size:12.5px !important; }
+
+table{ font-size:13px !important; }
+th, td{ border:1px solid var(--pub-line) !important; }
+th{
+  background:var(--pub-wash) !important; color:var(--pub-ink) !important;
+  font-size:11.5px !important; font-weight:700 !important; letter-spacing:.01em;
+}
+td{ background:#fff !important; }
+.table-scroll{ border:1px solid var(--pub-line) !important; border-radius:2px; }
+
+.badge{ border-radius:2px !important; font-size:11.5px !important; letter-spacing:.02em; }
+
+.summary-card{
+  background:var(--pub-wash) !important;
+  border:none !important; border-left:3px solid var(--pub-pine) !important;
+  border-radius:2px !important;
+}
+.summary-card .label{
+  font-family:var(--pub-mono) !important; font-size:10.5px !important;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--pub-pine) !important; font-weight:600 !important;
+}
+.summary-card .value{ color:var(--pub-ink) !important; font-variant-numeric:tabular-nums; font-weight:700 !important; }
+
+.retire-reference-box{
+  background:#f7f1e4 !important; border:1px solid #dcc79a !important;
+  border-radius:2px !important;
+}
+.retire-reference-label{ color:var(--pub-gold) !important; font-weight:700 !important; }
+.retire-warning, .retire-reference-note, .retire-guidance-text{ color:#6f5322 !important; }
+
+footer{ color:var(--pub-sub) !important; font-size:12.5px !important; border-top:1px solid var(--pub-line) !important; }
+
+@media (max-width:720px){
+  .wrap{ padding:36px 18px 26px !important; }
+  h1{ font-size:24px !important; }
+  section{ padding:16px 15px 18px !important; }
+}
+
+/* ══════════════════════════════════════════
+   2026-08-07 · 정제 층 — 마진 계산기와 동일 토큰
+   ══════════════════════════════════════════ */
+:root{
+  --sp-1:6px; --sp-2:10px; --sp-3:16px; --sp-4:24px; --sp-5:32px;
+  --rad:10px; --rad-sm:7px;
+}
+
+.wrap{ padding:60px 26px 44px !important; }
+h1{ font-size:30px !important; margin:0 0 var(--sp-2) !important; letter-spacing:-.028em !important; }
+.subtitle{ font-size:15px !important; line-height:1.78 !important; margin:0 0 var(--sp-4) !important; }
+
+/* ── 배너 ── */
+.banner{
+  border-radius:var(--rad-sm) !important;
+  padding:13px 16px !important;
+  margin-bottom:var(--sp-2) !important;
+}
+.banner + .banner{ margin-bottom:var(--sp-4) !important; }
+
+/* ── 섹션: 왼쪽 굵은 선을 위로 ── */
+section{
+  border:1px solid var(--pub-line) !important;
+  border-top:3px solid var(--pub-pine) !important;
+  border-left:1px solid var(--pub-line) !important;
+  border-radius:var(--rad) !important;
+  box-shadow:0 1px 2px rgba(28,26,23,.04), 0 10px 28px rgba(28,26,23,.05) !important;
+  padding:var(--sp-4) 26px 26px !important;
+  margin-bottom:var(--sp-3) !important;
+}
+section h2{ padding-bottom:13px !important; margin:0 0 var(--sp-4) !important; }
+
+/* ── 입력 행·필드: 간격 통일 ── */
+.row{ gap:var(--sp-3) var(--sp-4) !important; align-items:flex-end !important; }
+.field{ gap:var(--sp-1) !important; }
+.toggle-row{ gap:var(--sp-2) !important; padding:3px 0 !important; line-height:1.6 !important; }
+.toggle-row + .toggle-row{ margin-top:var(--sp-1) !important; }
+
+input[type="month"], input[type="date"], input[type="text"], input[type="number"], select{
+  border-radius:var(--rad-sm) !important;
+  padding:8px 11px !important;
+  transition:border-color .15s, box-shadow .15s !important;
+}
+input:hover, select:hover{ border-color:var(--pub-pine-soft) !important; }
+input:focus, select:focus{
+  outline:none !important;
+  border-color:var(--pub-pine) !important;
+  box-shadow:0 0 0 3px rgba(36,84,74,.12) !important;
+}
+input[type="number"]{ width:104px !important; }
+input[type="checkbox"]{ accent-color:var(--pub-pine); }
+
+.btn{
+  border-radius:var(--rad-sm) !important;
+  padding:8px 14px !important;
+  transition:background .15s, border-color .15s !important;
+}
+.btn-remove{ padding:6px 10px !important; }
+
+/* ── 공휴일 입력 ── */
+#holidayContainer{ gap:var(--sp-2) !important; margin:var(--sp-2) 0 var(--sp-3) !important; }
+.holiday-row{ gap:var(--sp-1) !important; }
+
+/* ── 기준시간 표시 ── */
+#baseHoursValue{ letter-spacing:-.02em !important; }
+#baseHoursNote{ margin-top:var(--sp-1) !important; line-height:1.6 !important; }
+
+/* ── 표 ── */
+.table-scroll{ border-radius:var(--rad-sm) !important; overflow:hidden auto; }
+table{ border-collapse:separate !important; border-spacing:0 !important; }
+th, td{ border:none !important; border-bottom:1px solid var(--pub-line) !important; padding:10px 11px !important; }
+th{ border-bottom:1px solid var(--pub-line2) !important; padding:11px !important; }
+td + td, th + th{ border-left:1px solid rgba(28,26,23,.05) !important; }
+tbody tr:last-child td{ border-bottom:none !important; }
+td input[type="text"]{ width:86px !important; }
+td input[type="number"]{ width:80px !important; }
+.maternity-cell{ gap:var(--sp-1) !important; }
+.review-block{ gap:var(--sp-1) !important; margin-top:var(--sp-2) !important; }
+
+/* ── 배지: 알약형으로 부드럽게 ── */
+.badge{ border-radius:999px !important; padding:4px 12px !important; }
+
+/* ── 요약 카드 ── */
+.summary-cards{ gap:var(--sp-3) !important; }
+.summary-card{
+  border-radius:var(--rad-sm) !important;
+  padding:15px 17px !important;
+}
+.summary-card .label{ margin-bottom:var(--sp-1) !important; }
+.summary-card .value{ letter-spacing:-.02em !important; }
+
+/* ── 퇴사특례 상세 ── */
+.retire-detail{ gap:var(--sp-2) !important; padding:var(--sp-2) 4px !important; }
+.retire-guidance-text, .retire-reference-box{ border-radius:var(--rad-sm) !important; padding:11px 13px !important; line-height:1.65 !important; }
+
+/* ── 안내문 ── */
+.note{ margin-top:var(--sp-2) !important; line-height:1.65 !important; }
+#globalMessages{ border-radius:var(--rad-sm) !important; padding:11px 14px !important; }
+
+footer{ margin-top:var(--sp-4) !important; padding-top:var(--sp-3) !important; line-height:1.75 !important; }
+
+@media (max-width:720px){
+  .wrap{ padding:44px 18px 28px !important; }
+  h1{ font-size:25px !important; }
+  section{ padding:20px 18px 22px !important; }
+}
+
+/* ══════════════════════════════════════════
+   2026-08-07 · 한 판 재구성
+   ══════════════════════════════════════════ */
+.wrap{ max-width:1180px !important; }
+
+/* ── 상단 2열: 설정(좌) / 요약(우) ── */
+.top-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,420px);
+  gap:var(--sp-3);
+  align-items:start;
+}
+.top-grid > section{ margin-bottom:0 !important; height:100%; }
+.top-grid .summary-cards{
+  display:grid !important;
+  grid-template-columns:1fr 1fr;
+  gap:var(--sp-2) !important;
+}
+.top-grid .summary-card{ min-width:0 !important; }
+#sec-summary{ position:sticky; top:16px; }
+
+/* 가산 인원 카드 강조 */
+.summary-card.is-key{
+  background:var(--pub-pine) !important;
+  border-left-color:var(--pub-pine) !important;
+}
+.summary-card.is-key .label{ color:rgba(255,255,255,.72) !important; }
+.summary-card.is-key .value{ color:#fff !important; }
+.sum-formula{
+  grid-column:1 / -1;
+  font-size:11.5px; color:var(--pub-sub);
+  font-family:var(--pub-mono); letter-spacing:.01em;
+  padding-top:var(--sp-1); line-height:1.6;
+}
+
+/* ── 표: 선택 입력 접기 ── */
+.tbl-toolbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:var(--sp-3); flex-wrap:wrap; margin-bottom:var(--sp-2);
+}
+.tbl-toggle{
+  display:inline-flex; align-items:center; gap:7px;
+  border:1px solid var(--pub-line2); background:#fff;
+  border-radius:999px; padding:6px 14px;
+  font-size:12.5px; color:var(--pub-sub); cursor:pointer;
+  font-family:inherit; transition:background .15s, border-color .15s;
+}
+.tbl-toggle:hover{ background:var(--pub-wash); border-color:var(--pub-pine-soft); }
+.tbl-toggle[aria-pressed="true"]{
+  background:var(--pub-wash); border-color:var(--pub-pine); color:var(--pub-pine); font-weight:650;
+}
+/* 접힘 상태에서 선택 입력 6열을 숨긴다 (DOM에는 남는다 — 계산에 계속 쓰인다) */
+table.is-compact th:nth-child(2),  table.is-compact td:nth-child(2),
+table.is-compact th:nth-child(4),  table.is-compact td:nth-child(4),
+table.is-compact th:nth-child(5),  table.is-compact td:nth-child(5),
+table.is-compact th:nth-child(6),  table.is-compact td:nth-child(6),
+table.is-compact th:nth-child(7),  table.is-compact td:nth-child(7),
+table.is-compact th:nth-child(8),  table.is-compact td:nth-child(8){
+  display:none;
+}
+/* 퇴사특례 상세행은 colspan이라 위 규칙에 걸리지 않는다 — 접힘 상태에서도 유지 */
+table.is-compact{ min-width:0 !important; }
+table:not(.is-compact){ min-width:1280px !important; }
+
+/* ── 행 높이 안정화 ── */
+th, td{ vertical-align:middle !important; }
+.maternity-cell{
+  flex-direction:row !important; flex-wrap:wrap;
+  justify-content:center; gap:var(--sp-1) var(--sp-2) !important;
+}
+.multiple-label{ white-space:nowrap; }
+/* 「확인 필요」 블록을 가로로 흘려 행 증가를 억제 */
+.review-block{
+  flex-direction:row !important; flex-wrap:wrap; align-items:center;
+  justify-content:center; gap:var(--sp-1) var(--sp-2) !important;
+  min-width:0 !important;
+}
+.clawback-warning{ flex-basis:100%; text-align:center !important; }
+.manual-decision{ min-width:150px; }
+.manual-remark{ min-width:140px; flex:1; }
+.remark-msg{ flex-basis:100%; text-align:center !important; min-height:0 !important; }
+
+/* ── 차이 막대 ── */
+.diffbar{
+  display:block; height:5px; border-radius:3px;
+  background:rgba(28,26,23,.09); margin-top:5px; overflow:hidden;
+}
+.diffbar > i{
+  display:block; height:100%; border-radius:3px;
+  background:var(--pub-pine); transition:width .25s ease;
+}
+.diffbar.is-short > i{ background:var(--pub-gold); }
+
+/* ── 근거·주의사항 접기 ── */
+.pub-fold{ margin-top:var(--sp-3); }
+.pub-fold > details{
+  border:1px solid var(--pub-line);
+  border-radius:var(--rad-sm);
+  background:var(--pub-card);
+}
+.pub-fold summary{
+  cursor:pointer; list-style:none;
+  padding:13px 18px; font-size:13.5px; font-weight:650;
+  color:var(--pub-pine); display:flex; align-items:center; gap:8px;
+}
+.pub-fold summary::-webkit-details-marker{ display:none; }
+.pub-fold summary::before{ content:'▸'; font-size:11px; transition:transform .15s; }
+.pub-fold details[open] summary::before{ transform:rotate(90deg); }
+.pub-fold .fold-body{
+  padding:2px 20px 18px; font-size:13px; color:var(--pub-sub); line-height:1.72;
+}
+.pub-fold .fold-body p{ margin:10px 0 0; }
+.pub-fold .fold-body p:first-child{ margin-top:0; }
+
+@media (max-width:980px){
+  .top-grid{ grid-template-columns:1fr; }
+  #sec-summary{ position:static; }
+  .top-grid > section{ margin-bottom:var(--sp-3) !important; }
+}
+@media (max-width:560px){
+  .top-grid .summary-cards{ grid-template-columns:1fr; }
+}
+
+  /* ─── 가독성 (2026-08-14) ─── */
+  body, h1, h2, h3, h4, p, li, dd, dt, td, th, em, span, label, button { word-break: keep-all; overflow-wrap: break-word; }
+
+/* ─── 타이포 위계 (2026-08-14, 02와 동일 방향) ─── */
+h1{ font-size:33px !important; }
+@media (max-width:720px){ h1{ font-size:25px !important; } }
+</style>
+
+<div class="wrap">
+
+  <h1>가산 사회복지사 근무시간 계산기</h1>
+  <p class="subtitle">고시 제49·51조 기준으로 개인별 충족·미달을 판정하고, 기관 단위 가산 인원을 산정합니다.</p>
+
+  <div class="banner banner-warn">
+    ⚠ 일요일 제외 처리는 고시 제49조 원문에 <strong>명시되어 있지 않습니다</strong>(추론 구간). 공단 확인을 권장합니다.
+  </div>
+
+
+  <div id="globalMessages" role="alert"></div>
+
+  <div class="top-grid">
+  <section>
+    <h2>1. 대상 연월 · 제외일 설정</h2>
+    <div class="row">
+      <div class="field">
+        <label for="yearMonth">대상 연월</label>
+        <input type="month" id="yearMonth">
+      </div>
+      <div class="field">
+        <div class="toggle-row">
+          <input type="checkbox" id="excludeSunday" checked>
+          <label for="excludeSunday" title="고시 제49조① 원문 미명시 — 추론 구간">일요일을 근무가능일수에서 제외 (기본 켜짐, 추론)</label>
+        </div>
+        <div class="toggle-row">
+          <input type="checkbox" id="applyRoundRule">
+          <label for="applyRoundRule" title="고시에 없는 기관 운영 기준 — 소속 기관에서 이 규칙을 쓸 때만 켜십시오">라운딩 0회자를 청구 대상에서 제외 <strong>(고시 미규정 · 기관 운영 기준, 기본 꺼짐)</strong></label>
+        </div>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>공휴일 날짜 (직접 입력 — 대체공휴일 자동 판정 안 함)</label>
+      <div id="holidayContainer"></div>
+      <button type="button" class="btn" id="addHolidayBtn">+ 공휴일 추가</button>
+    </div>
+    <div style="margin-top:12px;">
+      <div id="baseHoursValue" title="고시 제49조① 기준 근무시간 = 근무가능일수 × 8시간">기준 근무시간: -</div>
+      <div id="baseHoursNote">연월을 선택하세요.</div>
+    </div>
+  </section>
+
+  <section id="sec-summary">
+    <h2>기관 단위 가산 인원</h2>
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="label" title="고시 제49조①">기준 근무시간</div>
+        <div class="value" id="sumBaseHours">-</div>
+      </div>
+      <div class="summary-card">
+        <div class="label" title="인정 ≥ 기준 (라운딩 규칙을 켠 경우 라운딩 ≥ 1 추가)">충족자 수</div>
+        <div class="value" id="sumQualified">-</div>
+      </div>
+      <div class="summary-card">
+        <div class="label" title="Σ(미달자 인정시간) — 고시 제51조③ 가산 인원 산정의 분자">미달 합산</div>
+        <div class="value" id="sumShortfall">-</div>
+      </div>
+      <div class="summary-card is-key">
+        <div class="label" title="고시 제51조③">가산 인원</div>
+        <div class="value" id="sumAddHeadcount">-</div>
+      </div>
+      <p class="sum-formula">가산 인원 = 충족자 수 + floor(미달 합산 ÷ 기준시간) · 고시 제51조③</p>
+    </div>
+  </section>
+  </div>
+
+  <section>
+    <h2>직원별 입력 · 판정</h2>
+    <div class="tbl-toolbar">
+      <button type="button" class="tbl-toggle" id="colToggle" aria-pressed="true">
+        <span id="colToggleIcon">⊞</span><span id="colToggleText">선택 입력 펼치기</span>
+      </button>
+      <span style="font-size:12px;color:var(--pub-sub)">유급휴가·출산전후·교육출장·근로단축·라운딩·퇴사특례는 접혀 있어도 계산에 반영됩니다.</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>이름</th>
+            <th title="고시 제54조⑤·제67조②③④">퇴사특례</th>
+            <th title="고시 제51조① — 휴게시간 제외 실근무">실근무시간(h)</th>
+            <th title="라운딩 0회면 청구 제외 — 고시 미규정 · 기관 운영 기준(선택 적용)">라운딩(회)</th>
+            <th title="세부사항 제12조 — 유급휴가 1일 최대 8h">유급휴가(일)</th>
+            <th title="세부사항 제12조 — 출산전후휴가 유급 60일(다태아 75일)">출산전후(일)</th>
+            <th title="세부사항 제12조 — 실소요, 1일 8h 상한 (월 합계 입력이라 일별 자동 캡 미적용)">교육·출장(h)</th>
+            <th title="세부사항 제12조 — 실소요, 1일 2h 상한 (월 합계 입력이라 일별 자동 캡 미적용)">근로단축(h)</th>
+            <th title="고시 제49조① 기준 근무시간">기준(h)</th>
+            <th title="고시 제51조① 인정 근무시간">인정(h)</th>
+            <th>차이(h)</th>
+            <th title="판정 로직 — 고시 제51조①">판정</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="employeeTbody"></tbody>
+      </table>
+    </div>
+    <button type="button" class="btn btn-primary" id="addEmployeeBtn" style="margin-top:10px;">+ 직원 추가</button>
+  </section>
+
+
+  <script>
+/* 표 열 접기 + 차이 막대 — 계산 로직에 관여하지 않는다.
+   숨김은 CSS display로만 하므로 입력 요소는 DOM에 남고 계산에 그대로 쓰인다. */
+(function(){
+  'use strict';
+  var table  = document.querySelector('.table-scroll table');
+  var btn    = document.getElementById('colToggle');
+  var icon   = document.getElementById('colToggleIcon');
+  var text   = document.getElementById('colToggleText');
+  if (!table || !btn) return;
+
+  /* 기본은 접힘 */
+  table.classList.add('is-compact');
+
+  btn.addEventListener('click', function(){
+    var compact = table.classList.toggle('is-compact');
+    btn.setAttribute('aria-pressed', String(compact));
+    icon.textContent = compact ? '⊞' : '⊟';
+    text.textContent = compact ? '선택 입력 펼치기' : '선택 입력 접기';
+  });
+
+  /* ── 차이 막대: out-base / out-diff 텍스트를 읽어 폭만 반영 ── */
+  function parseH(el){
+    if (!el) return NaN;
+    var t = (el.textContent || '').replace(/[^0-9.-]/g, '');
+    return t === '' ? NaN : parseFloat(t);
+  }
+
+  function paintRow(tr){
+    var baseEl = tr.querySelector('.out-base');
+    var diffEl = tr.querySelector('.out-diff');
+    var recEl  = tr.querySelector('.out-recognized');
+    if (!diffEl || !baseEl || !recEl) return;
+
+    var base = parseH(baseEl), rec = parseH(recEl);
+    var bar = diffEl.querySelector('.diffbar');
+
+    if (isNaN(base) || isNaN(rec) || base <= 0) {
+      if (bar) bar.remove();
+      return;
+    }
+    if (!bar) {
+      bar = document.createElement('span');
+      bar.className = 'diffbar';
+      bar.appendChild(document.createElement('i'));
+      diffEl.appendChild(bar);
+    }
+    var ratio = Math.max(0, Math.min(1, rec / base));
+    bar.firstChild.style.width = (ratio * 100) + '%';
+    bar.classList.toggle('is-short', rec < base);
+    bar.title = '기준 대비 ' + Math.round(ratio * 100) + '%';
+  }
+
+  function paintAll(){
+    Array.prototype.forEach.call(
+      table.querySelectorAll('tr.employee-row'), paintRow);
+  }
+
+  /* 계산 결과가 다시 그려질 때마다 반영 (행 추가/삭제 포함) */
+  var tbody = document.getElementById('employeeTbody');
+  if (tbody) {
+    var mo = new MutationObserver(function(){
+      /* 막대 삽입이 다시 관찰을 부르지 않도록 한 틱 미룬다 */
+      if (mo._q) return;
+      mo._q = true;
+      setTimeout(function(){ mo._q = false; paintAll(); }, 0);
+    });
+    mo.observe(tbody, { childList:true, characterData:true, subtree:true });
+  }
+  paintAll();
+})();
+  </script>
+
+  <div class="pub-fold"><details><summary>근거 · 주의사항 · 개인정보 처리</summary>
+    <div class="fold-body">
+      <p>이 계산기는 <strong>참고용</strong>입니다. 공식 판정은 공단 및 소속 기관의 기준을 따릅니다. 이 화면의 결과로 실제 청구를 확정하지 마세요.</p>
+      <p>기본값은 <strong>고시(제49조·제51조) 산식만</strong> 적용합니다. 「라운딩 0회자 제외」는 <strong>고시에 규정되지 않은 기관 운영 기준</strong>이므로, 소속 기관이 그렇게 운영할 때만 켜십시오.</p>
+      <p>「확인 필요」 행의 최종 처리 선택·비고는 화면 기록용이며, 집계(충족자 수·미달 합산·가산 인원)는 고시 제51조③ 산식에 따라 자동 계산된 값입니다.</p>
+    </div>
+  <footer>
+    출처: 「장기요양급여 제공기준 및 급여비용 산정방법 등에 관한 고시」(보건복지부고시 제2025-247호, 시행 2026.1.1.) 제49조·제51조 /
+    국민건강보험공단 세부사항 제12조 — 참고용이며, 공식 판정은 공단 및 소속 기관의 기준을 따릅니다.
+    직원 정보는 브라우저 안에서만 처리되며 저장·전송되지 않습니다.
+    <div style="margin-top:8px">
+      기본 설정은 고시 산식만 적용합니다. 기관별 운영 기준은 화면의 토글로 선택하십시오.<br>
+      브라우저 안에서만 계산되며 인터넷 없이도 동작합니다.
+      &nbsp;·&nbsp; 만든 사람 김영욱
+    </div>
+  </footer>
+  </details></div>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var employeeTbody = document.getElementById('employeeTbody');
+  var holidayContainer = document.getElementById('holidayContainer');
+  var yearMonthInput = document.getElementById('yearMonth');
+  var excludeSundayInput = document.getElementById('excludeSunday');
+  var applyRoundRuleInput = document.getElementById('applyRoundRule');
+  var globalMessages = document.getElementById('globalMessages');
+
+  function pad2(n){ return String(n).padStart(2, '0'); }
+  function formatDate(y, m, d){ return y + '-' + pad2(m) + '-' + pad2(d); }
+  function formatHours(n){
+    var rounded = Math.round(n * 10) / 10;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  }
+
+  // ---------- 공휴일 입력 ----------
+  function addHolidayRow(value){
+    var div = document.createElement('div');
+    div.className = 'holiday-row';
+    var input = document.createElement('input');
+    input.type = 'date';
+    input.className = 'holiday-date';
+    if (value) input.value = value;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-remove holiday-remove';
+    btn.textContent = '삭제';
+    div.appendChild(input);
+    div.appendChild(btn);
+    holidayContainer.appendChild(div);
+  }
+
+  holidayContainer.addEventListener('click', function(e){
+    if (e.target.classList.contains('holiday-remove')) {
+      e.target.closest('.holiday-row').remove();
+      recalcAll();
+    }
+  });
+  holidayContainer.addEventListener('change', function(e){
+    if (e.target.classList.contains('holiday-date')) recalcAll();
+  });
+  document.getElementById('addHolidayBtn').addEventListener('click', function(){
+    addHolidayRow('');
+  });
+
+  // ---------- 직원 행 ----------
+  function addEmployeeRow(prefill){
+    prefill = prefill || {};
+    var tr = document.createElement('tr');
+    tr.className = 'employee-row';
+    tr.innerHTML =
+      '<td><input type="text" class="f-name" placeholder="이름" value="' + (prefill.name || '') + '"></td>' +
+      '<td><input type="checkbox" class="f-retire-flag" title="고시 제54조⑤·제67조②③④"' + (prefill.retired ? ' checked' : '') + '></td>' +
+      '<td><input type="number" class="f-work" step="0.1" placeholder="예:176" value="' + (prefill.work === undefined ? '' : prefill.work) + '"></td>' +
+      '<td><input type="number" class="f-round" step="1" placeholder="예:15" value="' + (prefill.round === undefined ? '' : prefill.round) + '"></td>' +
+      '<td><input type="number" class="f-paidleave" step="0.5" placeholder="0" value="' + (prefill.paidleave === undefined ? '' : prefill.paidleave) + '"></td>' +
+      '<td class="maternity-cell">' +
+        '<input type="number" class="f-maternity" step="1" placeholder="0" value="' + (prefill.maternity === undefined ? '' : prefill.maternity) + '">' +
+        '<label class="multiple-label" title="세부사항 제12조 — 다태아 출산전후휴가 75일 한도"><input type="checkbox" class="f-multiple"' + (prefill.multiple ? ' checked' : '') + '> 다태아(75일)</label>' +
+      '</td>' +
+      '<td><input type="number" class="f-edu" step="0.1" placeholder="0" value="' + (prefill.edu === undefined ? '' : prefill.edu) + '"></td>' +
+      '<td><input type="number" class="f-reduced" step="0.1" placeholder="0" value="' + (prefill.reduced === undefined ? '' : prefill.reduced) + '"></td>' +
+      '<td class="out-base">-</td>' +
+      '<td class="out-recognized">-</td>' +
+      '<td class="out-diff">-</td>' +
+      '<td class="out-judgment">-</td>' +
+      '<td><button type="button" class="btn btn-remove row-remove">삭제</button></td>';
+    employeeTbody.appendChild(tr);
+
+    var detailTr = document.createElement('tr');
+    detailTr.className = 'retire-detail-row';
+    detailTr.style.display = 'none';
+    detailTr.innerHTML =
+      '<td colspan="13">' +
+        '<div class="retire-detail">' +
+          '<div class="field">' +
+            '<label>근무종료일</label>' +
+            '<input type="date" class="f-retire-end-date">' +
+          '</div>' +
+          '<div class="retire-guidance-text" title="고시 제67조②③④">' +
+            '감액방지 퇴사특례 — 직전 3개월 월기준 충족 시, 근무종료일 다음날부터 30일(공휴일·근로자의날·토요일 제외) 1일 8h 의제근무 인정. 연 2회 +10일(1회 최대 40일). 후임 채용일 종료. (제67조②③④)' +
+          '</div>' +
+          '<div class="retire-warning">⚠ 감액 산정은 본 계산기 범위 밖입니다 — 가산 인원과 무관하며, 공단 확인이 필요합니다.</div>' +
+          '<div class="retire-reference-box" title="참고용 — 가산 인원 계산(집계 카드)에는 반영되지 않습니다">' +
+            '<span class="retire-reference-label">참고: 의제근무 인정시간</span>' +
+            '<span class="out-retire-reference">-</span>' +
+            '<div class="retire-reference-note"></div>' +
+          '</div>' +
+        '</div>' +
+      '</td>';
+    employeeTbody.appendChild(detailTr);
+  }
+
+  document.getElementById('addEmployeeBtn').addEventListener('click', function(){
+    addEmployeeRow({});
+    recalcAll();
+  });
+
+  employeeTbody.addEventListener('click', function(e){
+    if (e.target.classList.contains('row-remove')) {
+      var tr = e.target.closest('tr');
+      var next = tr.nextElementSibling;
+      if (next && next.classList.contains('retire-detail-row')) next.remove();
+      tr.remove();
+      recalcAll();
+    }
+  });
+
+  employeeTbody.addEventListener('input', function(e){
+    if (e.target.classList.contains('manual-remark')) {
+      var block = e.target.closest('.review-block');
+      updateRemarkValidation(block.querySelector('.manual-decision'), e.target, block.querySelector('.remark-msg'));
+      return;
+    }
+    recalcAll();
+  });
+  employeeTbody.addEventListener('change', function(e){
+    if (e.target.classList.contains('manual-decision')) {
+      var block = e.target.closest('.review-block');
+      updateRemarkValidation(e.target, block.querySelector('.manual-remark'), block.querySelector('.remark-msg'));
+      return;
+    }
+    recalcAll();
+  });
+
+  function updateRemarkValidation(select, remark, msgEl){
+    if (select.value !== '' && remark.value.trim() === '') {
+      remark.classList.add('invalid');
+      msgEl.textContent = '비고 사유를 입력하세요';
+    } else {
+      remark.classList.remove('invalid');
+      msgEl.textContent = '';
+    }
+  }
+
+  yearMonthInput.addEventListener('change', recalcAll);
+  excludeSundayInput.addEventListener('change', recalcAll);
+  applyRoundRuleInput.addEventListener('change', recalcAll);
+
+  // ---------- 개인별 계산 ----------
+  function isRetiredRow(tr){
+    return tr.querySelector('.f-retire-flag').checked;
+  }
+
+  function validateAndCompute(tr, ctx){
+    if (isRetiredRow(tr)) {
+      // 고시 제54조⑤ — 퇴사특례 대상은 가산 계산(충족자 수·미달 합산)에서 완전 제외
+      return { status: 'retired' };
+    }
+    var name = tr.querySelector('.f-name').value.trim();
+    var workRaw = tr.querySelector('.f-work').value;
+    var roundRaw = tr.querySelector('.f-round').value;
+    var paidleaveRaw = tr.querySelector('.f-paidleave').value;
+    var maternityRaw = tr.querySelector('.f-maternity').value;
+    var isMultiple = tr.querySelector('.f-multiple').checked;
+    var eduRaw = tr.querySelector('.f-edu').value;
+    var reducedRaw = tr.querySelector('.f-reduced').value;
+
+    if (!ctx.monthSelected) {
+      return { status: 'insufficient', message: '연월을 먼저 선택하세요' };
+    }
+    if (!name || workRaw === '' || (applyRoundRuleInput.checked && roundRaw === '')) {
+      return { status: 'insufficient', message: applyRoundRuleInput.checked
+        ? '필수값(이름·실근무시간·라운딩횟수) 미입력'
+        : '필수값(이름·실근무시간) 미입력' };
+    }
+
+    var work = parseFloat(workRaw);
+    var round = roundRaw === '' ? 0 : parseFloat(roundRaw);
+    var paidleave = paidleaveRaw === '' ? 0 : parseFloat(paidleaveRaw);
+    var maternity = maternityRaw === '' ? 0 : parseFloat(maternityRaw);
+    var edu = eduRaw === '' ? 0 : parseFloat(eduRaw);
+    var reduced = reducedRaw === '' ? 0 : parseFloat(reducedRaw);
+
+    var nums = [work, round, paidleave, maternity, edu, reduced];
+    if (nums.some(function(v){ return Number.isNaN(v); })) {
+      return { status: 'insufficient', message: '숫자 형식이 올바르지 않습니다' };
+    }
+    if (nums.some(function(v){ return v < 0; })) {
+      return { status: 'error', message: '음수 값은 입력할 수 없습니다' };
+    }
+    if (!Number.isInteger(round)) {
+      return { status: 'error', message: '라운딩 횟수는 정수여야 합니다' };
+    }
+
+    var totalHoursInMonth = ctx.daysInMonth * 24;
+    if (work > totalHoursInMonth) {
+      return { status: 'error', message: '실근무시간이 해당 월 총시간(' + totalHoursInMonth + 'h)을 초과했습니다' };
+    }
+    if (paidleave > ctx.workableDays) {
+      return { status: 'error', message: '유급휴가일수가 근무가능일수(' + ctx.workableDays + '일)를 초과했습니다' };
+    }
+
+    var cappedWarning = '';
+    var maternityCap = isMultiple ? 75 : 60;
+    if (maternity > maternityCap) {
+      maternity = maternityCap;
+      cappedWarning = '출산전후휴가 상한(' + maternityCap + '일) 적용됨';
+    }
+
+    var recognizedHours = work + paidleave * 8 + maternity * 8 + edu + reduced;
+    // 모든 입력이 0.1시간 단위이므로 1/10h 정수로 정규화해 부동소수점 경계 오판 방지
+    var recTenths = Math.round(recognizedHours * 10);
+    var baseTenths = Math.round(ctx.baseHours * 10);
+    var diff = (recTenths - baseTenths) / 10;
+
+    var judgment;
+    if (applyRoundRuleInput.checked && round === 0) judgment = 'exclude';
+    else if (recTenths >= baseTenths) judgment = 'claim';
+    else judgment = 'review';
+
+    return { status: 'ok', recognizedHours: recognizedHours, recTenths: recTenths, diff: diff, judgment: judgment, cappedWarning: cappedWarning };
+  }
+
+  function renderJudgmentCell(td, result){
+    var existingSelect = td.querySelector('.manual-decision');
+    var existingRemark = td.querySelector('.manual-remark');
+    var savedDecision = existingSelect ? existingSelect.value : '';
+    var savedRemark = existingRemark ? existingRemark.value : '';
+
+    td.textContent = '';
+
+    if (result.status === 'insufficient' || result.status === 'error') {
+      var badge0 = document.createElement('span');
+      badge0.className = 'badge ' + (result.status === 'insufficient' ? 'badge-insufficient' : 'badge-error');
+      badge0.textContent = result.status === 'insufficient' ? '입력 부족' : '입력 오류';
+      if (result.status === 'insufficient') badge0.title = 'fail-closed: 필수값 미입력 시 판정을 추정하지 않습니다';
+      td.appendChild(badge0);
+      var msg0 = document.createElement('div');
+      msg0.className = 'row-msg';
+      msg0.textContent = result.message;
+      td.appendChild(msg0);
+      return;
+    }
+
+    if (result.status === 'retired') {
+      var badgeR = document.createElement('span');
+      badgeR.className = 'badge badge-exclude';
+      badgeR.title = '고시 제54조⑤';
+      badgeR.textContent = '가산 인원 제외 · 퇴사특례';
+      td.appendChild(badgeR);
+      return;
+    }
+
+    var map = {
+      exclude: ['badge-exclude', '청구 제외', '라운딩 0회 = 청구 제외 — 고시 미규정 · 기관 운영 기준'],
+      claim: ['badge-claim', '청구함', '인정 ≥ 기준 (고시 제51조①)'],
+      review: ['badge-review', '확인 필요', '인정 < 기준 — 관리자 확인 필요']
+    };
+    var info = map[result.judgment];
+    var badge = document.createElement('span');
+    badge.className = 'badge ' + info[0];
+    badge.textContent = info[1];
+    badge.title = info[2];
+    td.appendChild(badge);
+
+    if (result.cappedWarning) {
+      var w = document.createElement('div');
+      w.className = 'row-warn';
+      w.title = '세부사항 제12조';
+      w.textContent = '⚠ ' + result.cappedWarning;
+      td.appendChild(w);
+    }
+
+    if (result.judgment === 'review') {
+      var block = document.createElement('div');
+      block.className = 'review-block';
+
+      var warn = document.createElement('div');
+      warn.className = 'clawback-warning';
+      warn.title = '세부사항 제12조④⑤';
+      warn.textContent = '⚠ 환수 위험 — 미달 상태로 청구 시 급여비용 환수 대상';
+      block.appendChild(warn);
+
+      var select = document.createElement('select');
+      select.className = 'manual-decision';
+      select.innerHTML =
+        '<option value="">센터장 확인 필요(미정)</option>' +
+        '<option value="claim">청구함으로 처리</option>' +
+        '<option value="exclude">청구 제외로 처리</option>';
+      select.value = savedDecision;
+      block.appendChild(select);
+
+      var remark = document.createElement('input');
+      remark.type = 'text';
+      remark.className = 'manual-remark';
+      remark.placeholder = '비고 사유 입력(필수)';
+      remark.value = savedRemark;
+      block.appendChild(remark);
+
+      var remarkMsg = document.createElement('div');
+      remarkMsg.className = 'row-msg remark-msg';
+      block.appendChild(remarkMsg);
+
+      td.appendChild(block);
+      updateRemarkValidation(select, remark, remarkMsg);
+    }
+  }
+
+  function renderRowOutputs(tr, result, ctx){
+    var baseTd = tr.querySelector('.out-base');
+    var recTd = tr.querySelector('.out-recognized');
+    var diffTd = tr.querySelector('.out-diff');
+    var judgTd = tr.querySelector('.out-judgment');
+
+    if (result.status === 'retired') {
+      // 가산 트랙 밖 — 실근무/인정/차이는 산정하지 않음
+      baseTd.textContent = '—';
+      recTd.textContent = '—';
+      diffTd.textContent = '—';
+      diffTd.classList.remove('diff-negative', 'diff-positive');
+      renderJudgmentCell(judgTd, result);
+      return;
+    }
+
+    if (result.status !== 'ok') {
+      baseTd.textContent = ctx.monthSelected ? (formatHours(ctx.baseHours) + 'h') : '-';
+      recTd.textContent = '-';
+      diffTd.textContent = '-';
+      renderJudgmentCell(judgTd, result);
+      return;
+    }
+    baseTd.textContent = formatHours(ctx.baseHours) + 'h';
+    recTd.textContent = formatHours(result.recognizedHours) + 'h';
+    diffTd.textContent = (result.diff >= 0 ? '+' : '') + formatHours(result.diff) + 'h';
+    diffTd.classList.toggle('diff-negative', result.diff < 0);
+    diffTd.classList.toggle('diff-positive', result.diff >= 0);
+    renderJudgmentCell(judgTd, result);
+  }
+
+  // ---------- 퇴사특례 참고 산출 (제67조②③④ — 가산 계산과 무관, 참고용) ----------
+  // 근무가능일수 정의는 기준시간(§1)과 동일: 토·근로자의날·(토글)일요일·사용자 입력 공휴일 제외.
+  // 반환: { hours, spillover } — spillover=구간이 익월로 넘어가 익월 공휴일 미반영 근사인지.
+  function computeRetireReferenceHours(endDateStr, excludeSunday, holidaySet){
+    var parts = endDateStr.split('-');
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    var d = parseInt(parts[2], 10);
+    var endMonthKey = parts[0] + '-' + parts[1];
+    var workableCount = 0;
+    var spillover = false;
+    for (var i = 1; i <= 30; i++) {
+      var cur = new Date(y, m - 1, d + i); // 근무종료일 다음날부터 30일 구간 (월 넘김은 Date가 자동 처리)
+      var ds = formatDate(cur.getFullYear(), cur.getMonth() + 1, cur.getDate());
+      if (ds.slice(0, 7) !== endMonthKey) spillover = true; // 익월로 넘어감
+      var dow = cur.getDay();
+      var isSaturday = dow === 6;
+      var isSunday = dow === 0;
+      var isLaborDay = cur.getMonth() === 4 && cur.getDate() === 1; // 근로자의 날(5/1)
+      if (isSaturday) continue;
+      if (excludeSunday && isSunday) continue;
+      if (isLaborDay) continue;
+      if (holidaySet && holidaySet.has(ds)) continue; // 사용자 입력 공휴일 제외 (§1 일관)
+      workableCount++;
+    }
+    return { hours: workableCount * 8, spillover: spillover }; // 1일 8h 의제근무, 정수 처리
+  }
+
+  function updateRetireDetail(tr, ctx){
+    var detailTr = tr.nextElementSibling;
+    if (!detailTr || !detailTr.classList.contains('retire-detail-row')) return;
+    var checkbox = tr.querySelector('.f-retire-flag');
+
+    if (!checkbox.checked) {
+      detailTr.style.display = 'none';
+      return;
+    }
+    detailTr.style.display = 'table-row';
+
+    var endDateStr = detailTr.querySelector('.f-retire-end-date').value;
+    var refValueEl = detailTr.querySelector('.out-retire-reference');
+    var refNoteEl = detailTr.querySelector('.retire-reference-note');
+
+    if (!endDateStr) {
+      refValueEl.textContent = '-';
+      refNoteEl.textContent = '근무종료일을 입력하면 참고값이 표시됩니다.';
+      return;
+    }
+    if (!ctx.monthSelected) {
+      refValueEl.textContent = '-';
+      refNoteEl.textContent = '연월을 먼저 선택하세요.';
+      return;
+    }
+    if (endDateStr.slice(0, 7) !== ctx.ymValue) {
+      refValueEl.textContent = '-';
+      refNoteEl.textContent = '⚠ 근무종료일이 선택한 연월(' + ctx.ymValue + ') 밖입니다 — 참고값을 계산하지 않습니다.';
+      return;
+    }
+
+    var ref = computeRetireReferenceHours(endDateStr, ctx.excludeSunday, ctx.holidaySet);
+    var refHours = ref.hours;
+    refValueEl.textContent = formatHours(refHours) + 'h';
+    refNoteEl.textContent = '근무종료일 다음날부터 30일 구간(토요일·근로자의날' +
+      (ctx.excludeSunday ? '·일요일' : '') + '·상단 입력 공휴일 제외) 근무가능일 ' +
+      (refHours / 8) + '일 × 8h — 이 값은 가산 인원 요약에 반영되지 않습니다.' +
+      (ref.spillover ? ' ⚠ 구간이 익월로 넘어갑니다 — 상단에 입력하지 않은 익월 공휴일은 반영되지 않은 근사치입니다.' : '');
+  }
+
+  function renderEmployeeRow(tr, result, ctx){
+    renderRowOutputs(tr, result, ctx);
+    updateRetireDetail(tr, ctx);
+  }
+
+  // ---------- 전체 재계산 ----------
+  function recalcAll(){
+    globalMessages.textContent = '';
+    globalMessages.classList.remove('show');
+
+    var ymValue = yearMonthInput.value;
+    var baseHoursValueEl = document.getElementById('baseHoursValue');
+    var baseHoursNoteEl = document.getElementById('baseHoursNote');
+    var sumBaseHoursEl = document.getElementById('sumBaseHours');
+    var sumQualifiedEl = document.getElementById('sumQualified');
+    var sumShortfallEl = document.getElementById('sumShortfall');
+    var sumAddHeadcountEl = document.getElementById('sumAddHeadcount');
+
+    if (!ymValue) {
+      baseHoursValueEl.textContent = '기준 근무시간: -';
+      baseHoursNoteEl.textContent = '연월을 선택하세요.';
+      sumBaseHoursEl.textContent = '-';
+      sumQualifiedEl.textContent = '-';
+      sumShortfallEl.textContent = '-';
+      sumAddHeadcountEl.textContent = '-';
+      var ctxEmpty = { monthSelected: false };
+      Array.prototype.forEach.call(employeeTbody.querySelectorAll('tr.employee-row'), function(tr){
+        var resultEmpty = isRetiredRow(tr) ? { status: 'retired' } : { status: 'insufficient', message: '연월을 먼저 선택하세요' };
+        renderEmployeeRow(tr, resultEmpty, ctxEmpty);
+      });
+      return;
+    }
+
+    var parts = ymValue.split('-');
+    var year = parseInt(parts[0], 10);
+    var monthIndex0 = parseInt(parts[1], 10) - 1;
+    var daysInMonth = new Date(year, monthIndex0 + 1, 0).getDate();
+    var excludeSunday = excludeSundayInput.checked;
+
+    var excluded = new Set();
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dow = new Date(year, monthIndex0, d).getDay();
+      var ds = formatDate(year, monthIndex0 + 1, d);
+      if (dow === 6) excluded.add(ds);
+      if (excludeSunday && dow === 0) excluded.add(ds);
+    }
+    if (monthIndex0 === 4) excluded.add(formatDate(year, 5, 1));
+
+    var outOfRangeCount = 0;
+    var holidaySet = new Set(); // 사용자 입력 공휴일 전체(연월 무관) — 퇴사특례 참고값의 익월 구간용
+    Array.prototype.forEach.call(holidayContainer.querySelectorAll('.holiday-date'), function(inp){
+      var v = inp.value;
+      if (!v) { inp.classList.remove('invalid'); inp.title = ''; return; }
+      holidaySet.add(v);
+      if (v.slice(0, 7) !== ymValue) {
+        inp.classList.add('invalid');
+        inp.title = '선택한 연월과 다른 날짜 — 기준 근무시간에는 반영되지 않습니다(퇴사특례 참고값 구간에는 반영)';
+        outOfRangeCount++;
+      } else {
+        inp.classList.remove('invalid');
+        inp.title = '';
+        excluded.add(v);
+      }
+    });
+
+    var workableDays = daysInMonth - excluded.size;
+    var baseHours = workableDays * 8;
+
+    baseHoursValueEl.textContent = '기준 근무시간: ' + formatHours(baseHours) + 'h';
+    baseHoursNoteEl.textContent = year + '년 ' + (monthIndex0 + 1) + '월 · 총 ' + daysInMonth + '일 중 근무가능일 ' +
+      workableDays + '일 (제외일 ' + excluded.size + '일)' +
+      (outOfRangeCount ? ' · 선택 연월 밖 공휴일 ' + outOfRangeCount + '건은 무시됨' : '');
+    sumBaseHoursEl.textContent = formatHours(baseHours) + 'h';
+
+    var ctx = { monthSelected: true, daysInMonth: daysInMonth, workableDays: workableDays, baseHours: baseHours, ymValue: ymValue, excludeSunday: excludeSunday, holidaySet: holidaySet };
+
+    if (workableDays <= 0) {
+      globalMessages.textContent = '근무가능일수가 0일 이하입니다. 제외일 설정을 확인하세요.';
+      globalMessages.classList.add('show');
+      sumQualifiedEl.textContent = '-';
+      sumShortfallEl.textContent = '-';
+      sumAddHeadcountEl.textContent = '-';
+      Array.prototype.forEach.call(employeeTbody.querySelectorAll('tr.employee-row'), function(tr){
+        var resultZero = isRetiredRow(tr) ? { status: 'retired' } : { status: 'error', message: '근무가능일수가 0일 이하입니다' };
+        renderEmployeeRow(tr, resultZero, ctx);
+      });
+      return;
+    }
+
+    var qualifiedCount = 0, shortfallTenths = 0, excludedRowCount = 0;
+
+    Array.prototype.forEach.call(employeeTbody.querySelectorAll('tr.employee-row'), function(tr){
+      var result = validateAndCompute(tr, ctx);
+      renderEmployeeRow(tr, result, ctx);
+      if (result.status === 'retired') return; // 고시 제54조⑤ — 가산 집계에서 완전 제외 (입력오류 카운트 아님)
+      if (result.status !== 'ok') { excludedRowCount++; return; }
+      if (result.judgment === 'claim') qualifiedCount++;
+      else if (result.judgment === 'review') shortfallTenths += result.recTenths;
+    });
+
+    // 기준시간도 1/10h 정수로 맞춰 정수 나눗셈 → floor 경계 오판 방지 (고시 제51조③)
+    var baseTenths = Math.round(baseHours * 10);
+    var addHeadcount = qualifiedCount + Math.floor(shortfallTenths / baseTenths);
+
+    sumQualifiedEl.textContent = qualifiedCount + '명';
+    sumShortfallEl.textContent = formatHours(shortfallTenths / 10) + 'h';
+    sumAddHeadcountEl.textContent = addHeadcount + '명';
+
+    if (excludedRowCount > 0) {
+      globalMessages.textContent = '입력 부족/오류 ' + excludedRowCount + '명은 집계(충족자 수·미달 합산·가산 인원)에서 제외되었습니다.';
+      globalMessages.classList.add('show');
+    }
+  }
+
+  // ---------- 초기화 ----------
+  function init(){
+    var now = new Date();
+    yearMonthInput.value = now.getFullYear() + '-' + pad2(now.getMonth() + 1);
+
+    addHolidayRow('');
+
+    addEmployeeRow({ name: 'A사복', work: 176, round: 18, paidleave: 1 });
+    addEmployeeRow({ name: 'B사복', work: 140, round: 12, edu: 4 });
+    addEmployeeRow({ name: 'C사복', work: 0, round: 0 });
+
+    recalcAll();
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>

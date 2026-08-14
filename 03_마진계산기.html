@@ -1,0 +1,1482 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기관 마진 계산기 — 방문요양</title>
+<style>html,body{margin:0;padding:0}*,*::before,*::after{box-sizing:border-box}img,svg{max-width:100%}</style>
+</head>
+<body>
+
+<title>기관 마진 계산기 — 방문요양</title>
+  <style>
+/* ============================================
+   기관 마진 계산기 — 독립본 스타일
+   대시보드(projects/dashboard)에서 필요한 베이스만 번들 + #margin-panel 블록
+   팔레트: GitHub Dark
+   ============================================ */
+
+/* ── CSS Variables ── */
+:root {
+  --bg-primary:    #0d1117;
+  --bg-secondary:  #161b22;
+  --bg-tertiary:   #21262d;
+  --bg-hover:      #30363d;
+  --border:        #30363d;
+  --border-subtle: #21262d;
+  --text-primary:  #e6edf3;
+  --text-secondary:#c9d1d9;
+  --text-muted:    #8b949e;
+  --accent-blue:   #58a6ff;
+  --accent-green:  #3fb950;
+  --accent-yellow: #d29922;
+  --accent-red:    #f85149;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  --shadow:    0 1px 3px rgba(0,0,0,0.4);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.6);
+
+  --font: "Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,-apple-system,sans-serif;
+}
+
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── 독립 페이지 셸 ── */
+.mc-page { max-width: 600px; margin: 0 auto; padding: 28px 16px 64px; }
+.mc-page-title { font-size: 19px; font-weight: 700; color: var(--text-primary); }
+.mc-page-sub {
+  font-size: 12px; color: var(--text-muted); margin: 4px 0 18px; line-height: 1.5;
+}
+
+/* ── Panel / Card ── */
+.panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.panel-header h2 {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* ── Inputs & Selects ── */
+.input-field {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 7px 10px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: var(--font);
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.input-field:focus { outline: none; border-color: var(--accent-blue); }
+.input-field::placeholder { color: var(--text-muted); }
+
+.select-field {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 7px 8px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  flex-shrink: 0;
+}
+.select-field:focus { outline: none; border-color: var(--accent-blue); }
+
+/* ============================================
+   Margin Calculator — #margin-panel
+   ============================================ */
+.mc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mc-mode-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mc-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+.mc-radio-label input[type="radio"] {
+  accent-color: var(--accent-blue);
+  cursor: pointer;
+}
+
+.mc-mode-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mc-field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mc-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.mc-hint {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.mc-input {
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.mc-input-sm {
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.mc-select {
+  width: auto;
+}
+
+.mc-unit {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.mc-warn {
+  font-size: 11px;
+  color: var(--accent-yellow);
+  background: rgba(210,153,34,0.10);
+  border: 1px solid rgba(210,153,34,0.25);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+}
+
+.mc-section-top {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+  margin-top: 2px;
+}
+
+/* 접이식 요율 가정 */
+.mc-details {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0;
+  background: var(--bg-tertiary);
+}
+
+.mc-details-summary {
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 7px 10px;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mc-details-summary::-webkit-details-marker { display: none; }
+.mc-details-summary::before {
+  content: '▶';
+  font-size: 9px;
+  transition: transform 0.15s;
+}
+.mc-details[open] .mc-details-summary::before {
+  transform: rotate(90deg);
+}
+.mc-details-summary:hover { color: var(--text-primary); }
+
+.mc-details-warn {
+  font-size: 11px;
+  color: var(--accent-yellow);
+  padding: 6px 10px;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mc-rates-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+/* 결과 출력 영역 */
+.mc-result {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.mc-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 8px;
+}
+.mc-result-row:last-child { border-bottom: none; }
+
+.mc-result-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.mc-result-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.mc-indent .mc-result-label {
+  padding-left: 12px;
+  font-size: 11px;
+}
+.mc-indent .mc-result-value {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* 마진 행 — 시각적 강조 */
+.mc-result-margin {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  margin: 4px 0;
+  border-bottom: none !important;
+}
+.mc-result-margin .mc-result-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.mc-result-margin-val {
+  font-size: 16px !important;
+}
+/* 음수 마진 강조 */
+.mc-result-margin-val.mc-negative {
+  color: var(--accent-red) !important;
+}
+.mc-result-margin-val.mc-positive {
+  color: var(--accent-green) !important;
+}
+
+/* Mode C 전용 스타일 */
+.mc-badge-rec {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-blue);
+  border: 1px solid var(--accent-blue);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+  opacity: 0.85;
+}
+
+.mc-c-result {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  margin-top: 4px;
+}
+
+.mc-c-over-warn {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-red) !important;
+}
+
+/* 거시 수익 추정 서브섹션 */
+.mp-divider {
+  border-top: 1px dashed var(--border-subtle);
+  margin: 14px 0 6px;
+}
+.mp-subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 2px;
+}
+.mp-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+.mp-desc em {
+  color: var(--accent-yellow);
+  font-style: normal;
+}
+.mp-ratio-warn {
+  display: block;
+  font-size: 10px;
+  color: var(--accent-yellow);
+  margin-top: 1px;
+}
+
+/* 기관 마진 계산기 접이식(드롭다운) */
+.mc-summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mc-summary::-webkit-details-marker { display: none; }
+.mc-summary::marker { content: ''; }
+.mc-collapse-caret {
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+#margin-collapse[open] .mc-collapse-caret { transform: rotate(180deg); }
+#margin-collapse:not([open]) .mc-summary { border-bottom: none; margin-bottom: 0; }
+/* .mc-body가 display:flex라 details 기본 숨김을 덮어쓰므로 닫힘 시 명시적 숨김 */
+#margin-collapse:not([open]) .mc-body { display: none; }
+
+
+/* ── 공개 배포판 푸터 ── */
+.pub-footer{max-width:1100px;margin:40px auto 24px;padding:22px 26px;border-top:2px solid var(--line,#d8d5cd);
+  font-size:13px;line-height:1.7}
+.pub-footer h3{font-size:14px;margin:18px 0 8px;letter-spacing:-.01em}
+.pub-footer h3:first-child{margin-top:0}
+.pub-footer ul{margin:0;padding-left:18px}
+.pub-footer li{margin:5px 0}
+.pub-footer p{margin:6px 0}
+.pub-footer .warn{color:#93702f;font-weight:600}
+.pub-meta{margin-top:18px;padding-top:12px;border-top:1px solid var(--line,#d8d5cd);opacity:.75;font-size:12px}
+
+
+
+:root{
+  --pub-paper:#ffffff; --pub-card:#ffffff;
+  --pub-ink:#1c1a17;   --pub-sub:#5c574e;
+  --pub-line:#e7e7e4;  --pub-line2:#cfcfc9;
+  --pub-pine:#24544a;  --pub-pine-soft:#3a6f63;
+  --pub-gold:#93702f;  --pub-wash:#e6ede8;
+  --pub-sans:"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,-apple-system,sans-serif;
+  --pub-mono:ui-monospace,"SFMono-Regular","Cascadia Mono",Consolas,"D2Coding",monospace;
+  color-scheme: light;   
+}
+
+html, body{
+  background: var(--pub-paper) !important;
+  color: var(--pub-ink) !important;
+  font-family: var(--pub-sans) !important;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.7;
+}
+
+
+.mc-page{ max-width:860px !important; margin:0 auto !important; padding:56px 26px 30px !important; }
+.mc-page-title{
+  font-size:32px !important; font-weight:800 !important; line-height:1.2 !important;
+  letter-spacing:-.025em !important; color:var(--pub-ink) !important; margin:0 0 14px !important;
+  text-wrap:balance;
+}
+.mc-page-sub{
+  font-size:15px !important; color:var(--pub-sub) !important;
+  max-width:46em; line-height:1.72 !important; margin:0 !important;
+}
+
+
+.mc-summary, .mc-collapse-caret{ display:none !important; }
+
+
+.panel{
+  background:var(--pub-card) !important;
+  border:1px solid var(--pub-line) !important;
+  border-left:3px solid var(--pub-pine) !important;
+  border-radius:3px !important;
+  box-shadow:0 1px 3px rgba(36,84,74,.07) !important;
+  margin:32px 0 0 !important;
+}
+.mc-body{ padding:26px 24px 28px !important; }
+
+
+.mc-mode-row{
+  display:flex; flex-wrap:wrap; gap:8px 18px;
+  padding-bottom:18px; margin-bottom:20px;
+  border-bottom:1px solid var(--pub-line);
+}
+.mc-radio-label{ font-size:14px !important; color:var(--pub-sub) !important; cursor:pointer; }
+.mc-badge-rec{
+  background:var(--pub-pine) !important; color:#fff !important;
+  border-radius:2px !important; font-size:11px !important;
+  padding:2px 6px !important; letter-spacing:.02em; font-weight:600;
+}
+.mc-field-row{ align-items:center; }
+.mc-label{ color:var(--pub-sub) !important; font-weight:600 !important; font-size:13.5px !important; }
+.mc-unit{ color:var(--pub-sub) !important; font-size:13px !important; }
+.mc-hint{ color:var(--pub-sub) !important; font-size:12.5px !important; }
+
+.input-field, .select-field, .mc-input, .mc-select, .mc-input-sm{
+  border:1px solid var(--pub-line2) !important;
+  border-radius:2px !important;
+  background:#fff !important;
+  color:var(--pub-ink) !important;
+  font-family:inherit !important;
+  font-variant-numeric:tabular-nums;
+}
+.input-field:focus, .select-field:focus, .mc-input:focus, .mc-select:focus, .mc-input-sm:focus{
+  outline:2px solid var(--pub-pine) !important; outline-offset:1px;
+  border-color:var(--pub-pine) !important;
+}
+
+
+.mc-result, .mp-result{
+  background:var(--pub-wash) !important;
+  border:none !important;
+  border-left:3px solid var(--pub-pine) !important;
+  border-radius:2px !important;
+  padding:18px 20px !important;
+  margin-top:24px !important;
+}
+.mp-subtitle{
+  font-family:var(--pub-mono) !important; font-size:11px !important;
+  letter-spacing:.13em; text-transform:uppercase;
+  color:var(--pub-pine) !important; font-weight:600 !important;
+}
+.mp-desc{ color:var(--pub-sub) !important; font-size:13px !important; }
+.mp-divider{ border-color:var(--pub-line2) !important; opacity:.7; }
+
+.mc-result-row{ padding:5px 0 !important; }
+.mc-result-label{ color:var(--pub-sub) !important; font-size:14px !important; }
+.mc-result-value{
+  color:var(--pub-ink) !important; font-variant-numeric:tabular-nums;
+  font-weight:650 !important;
+}
+.mc-result-margin{
+  border-top:1px solid var(--pub-line2) !important;
+  margin-top:8px !important; padding-top:12px !important;
+}
+.mc-result-margin-val{ color:var(--pub-pine) !important; font-size:21px !important; font-weight:700 !important; }
+
+.mc-rates-grid{ font-size:13px !important; color:var(--pub-sub) !important; }
+
+
+.mc-warn, .mc-details-warn, .mp-ratio-warn{ color:var(--pub-gold) !important; font-weight:600 !important; }
+.mc-details{ margin-top:18px !important; }
+.mc-details-summary{
+  color:var(--pub-pine) !important; font-size:13px !important;
+  cursor:pointer; font-weight:600;
+}
+
+
+.pub-footer{
+  max-width:860px !important; color:var(--pub-sub) !important;
+  border-top-color:var(--pub-line) !important;
+}
+.pub-footer h3{ color:var(--pub-ink) !important; }
+.pub-footer .warn{ color:var(--pub-gold) !important; }
+.pub-meta{ border-top-color:var(--pub-line) !important; }
+
+@media (max-width:720px){
+  .mc-page{ padding:40px 20px 24px !important; }
+  .mc-page-title{ font-size:26px !important; }
+  .mc-body{ padding:20px 16px 22px !important; }
+}
+
+/* ══════════════════════════════════════════
+   2026-08-07 · 정제 층 — 간격·정렬·모서리 통일
+   기존 규칙은 건드리지 않고 이 블록에서만 덮는다.
+   ══════════════════════════════════════════ */
+:root{
+  --sp-1:6px; --sp-2:10px; --sp-3:16px; --sp-4:24px; --sp-5:32px;
+  --rad:10px; --rad-sm:7px;
+  --ctrl-w:152px;
+}
+
+/* ── 페이지 ── */
+.mc-page{ max-width:820px !important; padding:64px 24px 44px !important; }
+.mc-page-title{ font-size:30px !important; margin:0 0 var(--sp-2) !important; letter-spacing:-.028em !important; }
+.mc-page-sub{ font-size:15px !important; line-height:1.78 !important; }
+
+/* ── 패널: 왼쪽 굵은 선을 위쪽으로 옮겨 각진 인상을 줄인다 ── */
+.panel{
+  border:1px solid var(--pub-line) !important;
+  border-top:3px solid var(--pub-pine) !important;
+  border-left:1px solid var(--pub-line) !important;
+  border-radius:var(--rad) !important;
+  box-shadow:0 1px 2px rgba(28,26,23,.04), 0 10px 28px rgba(28,26,23,.05) !important;
+  margin:var(--sp-5) 0 0 !important;
+  overflow:hidden;
+}
+.mc-body{ padding:var(--sp-4) 26px 26px !important; gap:0 !important; }
+
+/* ── 모드 선택 ── */
+.mc-mode-row{
+  gap:var(--sp-2) 22px !important;
+  padding-bottom:var(--sp-3) !important;
+  margin-bottom:var(--sp-4) !important;
+  border-bottom:1px solid var(--pub-line) !important;
+}
+.mc-radio-label{ gap:7px !important; }
+
+/* ── 입력 행: 3열 그리드로 열을 맞춘다 (라벨 / 입력 / 단위) ── */
+.mc-mode-fields{ gap:0 !important; }
+.mc-field-row{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) var(--ctrl-w) 34px;
+  align-items:center !important;
+  gap:0 var(--sp-3) !important;
+  padding:7px 0 !important;
+}
+.mc-label{ min-width:0 !important; line-height:1.5 !important; }
+.mc-hint{ margin-top:3px !important; line-height:1.45 !important; }
+.mc-input, .mc-input-sm, .mc-select, .mc-field-row .select-field, .mc-field-row .input-field{
+  width:100% !important; flex-shrink:1 !important;
+}
+.mc-field-row > .select-field{ grid-column:2 / span 2; }
+.mc-unit{ text-align:left; }
+
+/* ── 컨트롤 ── */
+.input-field, .select-field{
+  border-radius:var(--rad-sm) !important;
+  padding:9px 11px !important;
+  font-size:14px !important;
+  transition:border-color .15s, box-shadow .15s !important;
+}
+.input-field:hover, .select-field:hover{ border-color:var(--pub-pine-soft) !important; }
+.input-field:focus, .select-field:focus{
+  outline:none !important;
+  border-color:var(--pub-pine) !important;
+  box-shadow:0 0 0 3px rgba(36,84,74,.12) !important;
+}
+
+/* ── 구분선이 붙는 행 ── */
+.mc-section-top{
+  border-top:1px solid var(--pub-line) !important;
+  padding-top:var(--sp-3) !important;
+  margin-top:var(--sp-2) !important;
+}
+
+/* ── 접이식 ── */
+.mc-details{
+  border:1px solid var(--pub-line) !important;
+  border-radius:var(--rad-sm) !important;
+  background:transparent !important;
+  margin-top:var(--sp-4) !important;
+  overflow:hidden;
+}
+.mc-details-summary{ padding:11px 14px !important; }
+.mc-details-warn{ padding:9px 14px !important; border-color:var(--pub-line) !important; }
+.mc-rates-grid{ padding:var(--sp-2) 14px 14px !important; gap:0 !important; }
+
+/* ── 결과 블록 ── */
+.mc-result, .mp-result, .mc-c-result{
+  background:var(--pub-wash) !important;
+  border:none !important;
+  border-left:3px solid var(--pub-pine) !important;
+  border-radius:var(--rad-sm) !important;
+  padding:var(--sp-3) 20px !important;
+  margin-top:var(--sp-4) !important;
+  gap:0 !important;
+}
+.mc-c-result{ background:transparent !important; border:1px solid var(--pub-line) !important; border-left:3px solid var(--pub-pine) !important; }
+.mc-result-row{
+  padding:8px 0 !important;
+  border-bottom:1px solid rgba(28,26,23,.06) !important;
+  gap:var(--sp-3) !important;
+}
+.mc-result-row:last-child{ border-bottom:none !important; }
+.mc-result-label{ line-height:1.5 !important; }
+.mc-indent .mc-result-label{ padding-left:14px !important; }
+.mc-result-margin{
+  background:transparent !important;
+  border-top:1px solid var(--pub-line2) !important;
+  border-bottom:none !important;
+  margin-top:var(--sp-2) !important;
+  padding:14px 0 4px !important;
+}
+.mc-result-margin-val{ letter-spacing:-.02em !important; }
+
+/* ── 거시 추정 서브섹션 ── */
+.mp-divider{ margin:var(--sp-5) 0 var(--sp-3) !important; }
+.mp-subtitle{ margin:0 0 var(--sp-1) !important; }
+.mp-desc{ margin:0 0 var(--sp-3) !important; line-height:1.6 !important; }
+
+/* ── 경고 ── */
+.mc-warn{
+  border-radius:var(--rad-sm) !important;
+  padding:10px 13px !important;
+  border-color:rgba(147,112,47,.3) !important;
+  background:rgba(147,112,47,.07) !important;
+  margin:var(--sp-2) 0 !important;
+}
+
+/* ── 푸터 ── */
+.pub-footer{ max-width:820px !important; padding:26px 24px 24px !important; margin-top:var(--sp-5) !important; }
+.pub-footer h3{ margin:22px 0 var(--sp-2) !important; }
+.pub-footer li{ margin:6px 0 !important; }
+
+@media (max-width:720px){
+  .mc-page{ padding:44px 20px 28px !important; }
+  .mc-body{ padding:20px 18px 22px !important; }
+  .mc-field-row{ grid-template-columns:minmax(0,1fr) 116px 30px; gap:0 var(--sp-2) !important; }
+  .mc-page-title{ font-size:25px !important; }
+}
+
+/* ══════════════════════════════════════════
+   2026-08-07 · 2열 배치 — 입력(좌) / 결과(우)
+   DOM은 이미 「입력 → 결과」 순이라 grid-column만 지정한다.
+   ══════════════════════════════════════════ */
+.mc-page{ max-width:1120px !important; }
+
+.mc-body{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,400px);
+  gap:0 var(--sp-5) !important;
+  align-items:start;
+  padding:var(--sp-4) 28px 28px !important;
+}
+/* 모드 선택 줄은 두 열을 가로지른다 */
+.mc-mode-row{ grid-column:1 / -1 !important; }
+
+/* 입력·결과를 각각 한 덩어리로 묶어 행 어긋남을 막는다 (래핑은 스크립트가 수행) */
+.mc-col-left{ grid-column:1; min-width:0; display:flex; flex-direction:column; }
+.mc-col-right{
+  grid-column:2; min-width:0;
+  display:flex; flex-direction:column; gap:var(--sp-3);
+  position:sticky; top:20px;
+}
+.mc-col-right > *{ margin-top:0 !important; }
+
+/* ⚠ hidden 속성이 .mc-mode-fields{display:flex}에 덮여 모드 A·B가 함께 노출되던 문제 */
+[hidden]{ display:none !important; }
+
+/* ── 매출 구성 스택 바 ── */
+.mcbar{
+  margin:2px 0 var(--sp-3);
+  padding-bottom:var(--sp-3);
+  border-bottom:1px solid rgba(28,26,23,.08);
+}
+.mcbar-track{
+  display:flex; height:34px; width:100%;
+  border-radius:6px; overflow:hidden;
+  background:rgba(28,26,23,.06);
+}
+.mcbar-seg{
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:#fff;
+  white-space:nowrap; overflow:hidden;
+  transition:width .25s ease;
+  font-variant-numeric:tabular-nums;
+}
+.mcbar-w{ background:#4a7c70; }
+.mcbar-b{ background:#8aa79f; }
+.mcbar-m{ background:var(--pub-gold); }
+.mcbar-m.is-neg{ background:#a8503f; }
+.mcbar-legend{
+  display:flex; flex-wrap:wrap; gap:4px 14px;
+  margin-top:9px; font-size:11.5px; color:var(--pub-sub);
+}
+.mcbar-legend i{
+  display:inline-block; width:9px; height:9px; border-radius:2px;
+  margin-right:5px; vertical-align:baseline;
+}
+.mcbar-empty{ font-size:12px; color:var(--pub-sub); padding:9px 0; }
+
+/* ── 접기: 근거·주의사항 ── */
+.pub-fold{
+  max-width:1120px; margin:var(--sp-4) auto 0; padding:0 26px;
+}
+.pub-fold > details{
+  border:1px solid var(--pub-line);
+  border-radius:var(--rad-sm);
+  background:var(--pub-card);
+}
+.pub-fold summary{
+  cursor:pointer; list-style:none;
+  padding:13px 18px; font-size:13.5px; font-weight:650;
+  color:var(--pub-pine); display:flex; align-items:center; gap:8px;
+}
+.pub-fold summary::-webkit-details-marker{ display:none; }
+.pub-fold summary::before{
+  content:'▸'; font-size:11px; transition:transform .15s;
+}
+.pub-fold details[open] summary::before{ transform:rotate(90deg); }
+.pub-fold .pub-footer{
+  margin:0 !important; border-top:1px solid var(--pub-line) !important;
+  padding:18px 20px 20px !important; max-width:none !important;
+}
+
+@media (max-width:860px){
+  .mc-body{ grid-template-columns:1fr !important; gap:0 !important; }
+  .mc-col-left, .mc-col-right{ grid-column:1 !important; }
+  .mc-col-right{ position:static; margin-top:var(--sp-4); }
+}
+
+  /* ─── 가독성 (2026-08-14) ─── */
+  body, h1, h2, h3, h4, p, li, dd, dt, td, th, em, span, label, button { word-break: keep-all; overflow-wrap: break-word; }
+
+/* ─── 타이포 위계 (2026-08-14, 02와 동일 방향) ─── */
+.mc-page-title{ font-size:33px !important; }
+@media (max-width:720px){ .mc-page-title{ font-size:26px !important; } }
+</style>
+
+  <main class="mc-page">
+    <h1 class="mc-page-title">방문요양 기관 마진 계산기</h1>
+    <p class="mc-page-sub">
+      방문요양 수급자 케어 조건(등급·시간·횟수·유형)과 요양보호사 시급을 입력하면,
+      2026 고시 수가 기준으로 기관 마진·손익분기 시급을 자동 산정합니다. 순수 로컬 계산 — 입력값은 저장·전송되지 않습니다.
+    </p>
+
+    <section class="panel" id="margin-panel">
+      <details class="panel-collapse" id="margin-collapse" open>
+      <summary class="panel-header mc-summary">
+        <h2>💰 기관 마진 계산기</h2>
+        <span class="mc-collapse-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="mc-body">
+
+        <!-- 매출 산정 모드 선택 -->
+        <div class="mc-mode-row">
+          <label class="mc-radio-label">
+            <input type="radio" name="mc-mode" value="C" checked> 2026 고시로 자동 산정 <span class="mc-badge-rec">권장</span>
+          </label>
+          <label class="mc-radio-label">
+            <input type="radio" name="mc-mode" value="A"> 본인부담금에서 역산
+          </label>
+          <label class="mc-radio-label">
+            <input type="radio" name="mc-mode" value="B"> 총 청구액 직접 입력
+          </label>
+        </div>
+
+        <!-- 모드 C 입력 -->
+        <div id="mc-mode-c" class="mc-mode-fields">
+          <div class="mc-field-row">
+            <label class="mc-label">장기요양 등급</label>
+            <select id="mc-grade" class="select-field mc-select">
+              <option value="1">1등급</option>
+              <option value="2">2등급</option>
+              <option value="3" selected>3등급</option>
+              <option value="4">4등급</option>
+              <option value="5">5등급</option>
+              <option value="cog">인지지원등급</option>
+            </select>
+          </div>
+          <div class="mc-field-row">
+            <label class="mc-label">방문 1회 시간</label>
+            <select id="mc-visit-min" class="select-field mc-select">
+              <option value="30">30분</option>
+              <option value="60">60분</option>
+              <option value="90">90분</option>
+              <option value="120" selected>120분</option>
+              <option value="150">150분</option>
+              <option value="180">180분</option>
+              <option value="210">210분</option>
+              <option value="240">240분</option>
+            </select>
+          </div>
+          <div class="mc-field-row">
+            <label class="mc-label">월 방문 횟수</label>
+            <input type="number" id="mc-visit-count" class="input-field mc-input" value="20" placeholder="예: 20" min="0">
+            <span class="mc-unit">회</span>
+          </div>
+          <div class="mc-field-row">
+            <label class="mc-label">대상자 유형</label>
+            <select id="mc-copay-type" class="select-field mc-select">
+              <option value="general" selected>일반 (15%)</option>
+              <option value="reduce40">40% 감경 (9%)</option>
+              <option value="reduce60">60% 감경 (6%)</option>
+              <option value="basic">기초수급 (0%)</option>
+            </select>
+          </div>
+          <div class="mc-field-row">
+            <label class="mc-label">요양보호사 시급
+              <span class="mc-hint">(구인 시세 13,000~20,410원)</span>
+            </label>
+            <input type="number" id="mc-wage-hourly" class="input-field mc-input" value="13000" min="0">
+            <span class="mc-unit">원</span>
+          </div>
+          <div class="mc-field-row">
+            <label class="mc-label">주휴 가산율
+              <span class="mc-hint">(주 15시간↑ 근무 시 통상 20%, 미해당 0)</span>
+            </label>
+            <input type="number" id="mc-weekly-holiday" class="input-field mc-input-sm" value="20" min="0" max="100" step="1">
+            <span class="mc-unit">%</span>
+          </div>
+        </div>
+
+        <!-- 모드 A 입력 -->
+        <div id="mc-mode-a" class="mc-mode-fields" hidden>
+          <div class="mc-field-row">
+            <label class="mc-label">자부담율</label>
+            <select id="mc-copay-rate" class="select-field mc-select">
+              <option value="15">15%</option>
+              <option value="9">9%</option>
+              <option value="6">6%</option>
+              <option value="0">0% (직접입력 사용)</option>
+            </select>
+          </div>
+          <div class="mc-field-row">
+            <label class="mc-label">월 본인부담금</label>
+            <input type="number" id="mc-copay-amount" class="input-field mc-input" placeholder="예: 150000" min="0">
+            <span class="mc-unit">원</span>
+          </div>
+          <div id="mc-mode-a-warn" class="mc-warn" hidden>
+            0% 선택 시 역산 불가 — 모드 (B)를 사용하세요.
+          </div>
+        </div>
+
+        <!-- 모드 B 입력 -->
+        <div id="mc-mode-b" class="mc-mode-fields" hidden>
+          <div class="mc-field-row">
+            <label class="mc-label">월 총 청구액(수가)</label>
+            <input type="number" id="mc-revenue-direct" class="input-field mc-input" placeholder="예: 1200000" min="0">
+            <span class="mc-unit">원</span>
+          </div>
+        </div>
+
+        <!-- 요양보호사 월급여 -->
+        <div id="mc-wage-manual-row" class="mc-field-row mc-section-top">
+          <label class="mc-label">요양보호사 월급여
+            <span class="mc-hint">(시급 계산 결과를 입력하세요)</span>
+          </label>
+          <input type="number" id="mc-wage" class="input-field mc-input" placeholder="예: 1050000" min="0">
+          <span class="mc-unit">원</span>
+        </div>
+
+        <!-- 요율 가정 (접이식) -->
+        <details class="mc-details">
+          <summary class="mc-details-summary">요율 가정 편집</summary>
+          <div class="mc-details-warn">
+            ⚠️ 기본 가정값 — 2026 공시(국민연금·건강보험·근로복지공단) 확인 필요
+          </div>
+          <div class="mc-rates-grid">
+            <div class="mc-field-row">
+              <label class="mc-label">4대보험 사용자부담 합</label>
+              <input type="number" id="mc-r-ins" class="input-field mc-input-sm" value="10.5" min="0" max="100" step="0.1">
+              <span class="mc-unit">%</span>
+            </div>
+            <div class="mc-field-row">
+              <label class="mc-label">퇴직금 적립</label>
+              <input type="number" id="mc-r-ret" class="input-field mc-input-sm" value="8.33" min="0" max="100" step="0.01">
+              <span class="mc-unit">%</span>
+            </div>
+            <div class="mc-field-row">
+              <label class="mc-label">연차·기타</label>
+              <input type="number" id="mc-r-etc" class="input-field mc-input-sm" value="0" min="0" max="100" step="0.1">
+              <span class="mc-unit">%</span>
+            </div>
+          </div>
+        </details>
+
+        <!-- Mode C 전용 보조 출력 -->
+        <div id="mc-c-result" class="mc-c-result" hidden>
+          <div class="mc-result-row">
+            <span class="mc-result-label">적용 단가</span>
+            <span class="mc-result-value" id="mc-out-c-rate">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">등급별 월한도액</span>
+            <span class="mc-result-value" id="mc-out-c-limit">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">월수가 (단가×횟수)</span>
+            <span class="mc-result-value" id="mc-out-c-monthly">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">한도초과액</span>
+            <span class="mc-result-value" id="mc-out-c-over">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">본인부담금</span>
+            <span class="mc-result-value" id="mc-out-c-copay">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">공단부담금</span>
+            <span class="mc-result-value" id="mc-out-c-public">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">월 케어시간</span>
+            <span class="mc-result-value" id="mc-out-c-hours">–</span>
+          </div>
+          <div class="mc-result-row mc-result-margin">
+            <span class="mc-result-label">손익분기 시급 (이 이상=적자)</span>
+            <span class="mc-result-value mc-result-margin-val" id="mc-out-c-be">–</span>
+          </div>
+        </div>
+
+        <!-- 출력 결과 -->
+        <div class="mc-result" id="mc-result">
+          <div class="mcbar" id="mcbar">
+            <div class="mcbar-track" id="mcbar-track" role="img" aria-label="매출 구성 비율">
+              <div class="mcbar-seg mcbar-w" id="mcbar-w" style="width:0"></div>
+              <div class="mcbar-seg mcbar-b" id="mcbar-b" style="width:0"></div>
+              <div class="mcbar-seg mcbar-m" id="mcbar-m" style="width:0"></div>
+            </div>
+            <div class="mcbar-legend">
+              <span><i style="background:#4a7c70"></i>직접급여</span>
+              <span><i style="background:#8aa79f"></i>부대인건비</span>
+              <span id="mcbar-lg-m"><i style="background:#93702f"></i>마진</span>
+            </div>
+            <div class="mcbar-empty" id="mcbar-empty">입력하면 매출 구성이 표시됩니다.</div>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">월 매출 (R)</span>
+            <span class="mc-result-value" id="mc-out-r">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">요양보호사 직접급여 (W)</span>
+            <span class="mc-result-value" id="mc-out-w">–</span>
+          </div>
+          <div class="mc-result-row mc-indent">
+            <span class="mc-result-label">└ 4대보험분</span>
+            <span class="mc-result-value" id="mc-out-ins">–</span>
+          </div>
+          <div class="mc-result-row mc-indent">
+            <span class="mc-result-label">└ 퇴직금</span>
+            <span class="mc-result-value" id="mc-out-ret">–</span>
+          </div>
+          <div class="mc-result-row mc-indent">
+            <span class="mc-result-label">└ 기타</span>
+            <span class="mc-result-value" id="mc-out-etc">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">부대인건비 합 (B)</span>
+            <span class="mc-result-value" id="mc-out-b">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">인건비총액 (L = W+B)</span>
+            <span class="mc-result-value" id="mc-out-l">–</span>
+          </div>
+          <div class="mc-result-row mc-result-margin">
+            <span class="mc-result-label">기관 마진 (M = R−L)</span>
+            <span class="mc-result-value mc-result-margin-val" id="mc-out-m">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">마진율</span>
+            <span class="mc-result-value" id="mc-out-rate">–</span>
+          </div>
+        </div>
+
+        <!-- 거시 수익 추정 서브섹션 -->
+        <div class="mp-divider"></div>
+        <h3 class="mp-subtitle">🏢 거시 수익 추정 (인건비지출비율 역산)</h3>
+        <p class="mp-desc">수급자별 데이터 없이 총 인건비로 기관 매출·수익을 역산 추정합니다. <em>추정치 — 기관이 비율 하한대로 지출한다고 가정</em></p>
+
+        <div class="mc-field-row">
+          <label class="mc-label">월 총 요양보호사 인건비
+            <span class="mc-hint">(급여+4대보험 기관부담+퇴직금 포함)</span>
+          </label>
+          <input type="number" id="mp-labor" class="input-field mc-input" placeholder="예: 30000000" min="0">
+          <span class="mc-unit">원</span>
+        </div>
+
+        <div class="mc-field-row">
+          <label class="mc-label">인건비 지출비율
+            <span class="mp-ratio-warn">⚠️ 방문요양 고시 기준(제2025-115호 제11조의2)·기관 실제값 입력 시 정확</span>
+          </label>
+          <input type="number" id="mp-ratio" class="input-field mc-input-sm" value="86.6" min="0" max="100" step="0.1">
+          <span class="mc-unit">%</span>
+        </div>
+
+        <div class="mc-field-row">
+          <label class="mc-label">월 운영비 (임대·관리 등)</label>
+          <input type="number" id="mp-opex" class="input-field mc-input" placeholder="선택(미입력=0)" min="0">
+          <span class="mc-unit">원</span>
+        </div>
+
+        <div class="mc-result mp-result" id="mp-result">
+          <div class="mc-result-row">
+            <span class="mc-result-label">추정 총매출</span>
+            <span class="mc-result-value" id="mp-out-revenue">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">비인건비 재원 (매출−인건비)</span>
+            <span class="mc-result-value" id="mp-out-nonlabor">–</span>
+          </div>
+          <div class="mc-result-row mc-result-margin">
+            <span class="mc-result-label">월 순이익 (−운영비)</span>
+            <span class="mc-result-value mc-result-margin-val" id="mp-out-net">–</span>
+          </div>
+          <div class="mc-result-row">
+            <span class="mc-result-label">순이익률</span>
+            <span class="mc-result-value" id="mp-out-rate">–</span>
+          </div>
+        </div>
+
+      </div>
+      </details>
+    </section>
+  </main>
+
+  <script>
+/* ============================================
+   Margin Calculator — 기관 마진 계산기
+   순수 프론트엔드. 네트워크·외부수집 없음.
+   출처: projects/dashboard #margin-panel 에서 2026-06-11 추출(독립본)
+   ============================================ */
+const MarginCalc = (() => {
+  /* 출처: 보건복지부 보도자료 2025.11.4 제6차 장기요양위원회 붙임2 (2026년 급여유형별 장기요양수가) */
+  const RATE_2026 = {
+    visit: {30:17450, 60:25320, 90:34120, 120:43430, 150:50640, 180:57020, 210:63530, 240:70080},
+    limit: {'1':2512900, '2':2331200, '3':1528200, '4':1409700, '5':1208900, 'cog':676320},
+    copay: {general:15, reduce40:9, reduce60:6, basic:0}
+  };
+
+  /* DOM refs — 초기화 시 한 번만 조회 */
+  let elMode, elModeA, elModeB, elModeC, elCopayRate, elCopayAmount;
+  let elRevenueDirect, elWage, elRIns, elRRet, elREtc;
+  let elModeAWarn;
+  let elGrade, elVisitMin, elVisitCount, elCopayType;
+  let elOutR, elOutW, elOutIns, elOutRet, elOutEtc, elOutB, elOutL, elOutM, elOutRate;
+  let elOutCRate, elOutCLimit, elOutCMonthly, elOutCOver, elOutCCopay, elOutCPublic;
+  let elOutCHours, elOutCBe;
+  let elCResultSection;
+  let elWageHourly, elWeeklyHoliday, elWageManualRow;
+
+  function fmt(n) {
+    return n.toLocaleString('ko-KR') + '원';
+  }
+  function fmtPct(n) {
+    return n.toFixed(1) + '%';
+  }
+  function dash(el) {
+    el.textContent = '–';
+    el.className = 'mc-result-value';
+  }
+  function setAll(r, w, ins, ret, etc, b, l, m, rate) {
+    elOutR.textContent    = fmt(r);
+    elOutW.textContent    = fmt(w);
+    elOutIns.textContent  = fmt(ins);
+    elOutRet.textContent  = fmt(ret);
+    elOutEtc.textContent  = fmt(etc);
+    elOutB.textContent    = fmt(b);
+    elOutL.textContent    = fmt(l);
+
+    elOutM.textContent = fmt(m);
+    elOutM.className   = 'mc-result-value mc-result-margin-val ' +
+                         (m < 0 ? 'mc-negative' : 'mc-positive');
+
+    elOutRate.textContent = (rate !== null ? fmtPct(rate) : '–');
+  }
+  function clearAll() {
+    [elOutR, elOutW, elOutIns, elOutRet, elOutEtc, elOutB, elOutL, elOutRate].forEach(dash);
+    dash(elOutM);
+    if (elOutCRate) {
+      [elOutCRate, elOutCLimit, elOutCMonthly, elOutCCopay, elOutCPublic].forEach(dash);
+      if (elOutCOver) { elOutCOver.textContent = '–'; elOutCOver.className = 'mc-result-value'; }
+      if (elOutCHours) { elOutCHours.textContent = '–'; elOutCHours.className = 'mc-result-value'; }
+      if (elOutCBe) { elOutCBe.textContent = '–'; elOutCBe.className = 'mc-result-value mc-result-margin-val'; }
+    }
+  }
+
+  function calc() {
+    const mode = document.querySelector('input[name="mc-mode"]:checked');
+    if (!mode) return clearAll();
+
+    const copayRate   = parseFloat(elCopayRate.value);
+    const copayAmt    = parseFloat(elCopayAmount.value);
+    const revDirect   = parseFloat(elRevenueDirect.value);
+    const wage        = parseFloat(elWage.value);
+    const rIns        = parseFloat(elRIns.value);
+    const rRet        = parseFloat(elRRet.value);
+    const rEtc        = parseFloat(elREtc.value);
+
+    /* 0% 자부담 경고 표시 */
+    const isZeroCopay = (mode.value === 'A' && copayRate === 0);
+    elModeAWarn.hidden = !isZeroCopay;
+
+    /* Mode C 전용 출력 초기화 */
+    elCResultSection.hidden = (mode.value !== 'C');
+    /* 시급 기반(Mode C)에선 수기 월급여 행 숨김 */
+    if (elWageManualRow) elWageManualRow.hidden = (mode.value === 'C');
+
+    /* 물리적 가드: 필수 값 누락·음수·0 나눔 방지 */
+    let R;
+    let effWage = wage;
+    if (mode.value === 'A') {
+      if (isZeroCopay || isNaN(copayAmt) || copayAmt <= 0) return clearAll();
+      R = copayAmt / (copayRate / 100);
+    } else if (mode.value === 'B') {
+      if (isNaN(revDirect) || revDirect <= 0) return clearAll();
+      R = revDirect;
+    } else {
+      /* Mode C: 자동 산정 */
+      const grade    = elGrade.value;
+      const minKey   = parseInt(elVisitMin.value, 10);
+      const count    = parseFloat(elVisitCount.value);
+      const copayKey = elCopayType.value;
+
+      if (isNaN(count) || count < 0) return clearAll();
+
+      const unitRate   = RATE_2026.visit[minKey];
+      const limitAmt   = RATE_2026.limit[grade];
+      const copayPct   = RATE_2026.copay[copayKey] / 100;
+      if (unitRate === undefined || limitAmt === undefined || isNaN(copayPct)) return clearAll();
+      const monthly    = unitRate * count;
+      const withinLimit = Math.min(monthly, limitAmt);
+      const over       = Math.max(0, monthly - limitAmt);
+
+      R = monthly; /* 기관 총수입(초과분 포함) */
+
+      const copayAmt_c = Math.round(withinLimit * copayPct + over * 1.0);
+      const publicAmt  = Math.round(withinLimit * (1 - copayPct));
+
+      /* Mode C 보조 출력 */
+      elOutCRate.textContent    = unitRate.toLocaleString('ko-KR') + '원';
+      elOutCLimit.textContent   = limitAmt.toLocaleString('ko-KR') + '원';
+      elOutCMonthly.textContent = Math.round(monthly).toLocaleString('ko-KR') + '원';
+
+      if (over > 0) {
+        elOutCOver.textContent  = Math.round(over).toLocaleString('ko-KR') + '원 — 한도 초과: 전액 본인부담';
+        elOutCOver.className    = 'mc-result-value mc-c-over-warn';
+      } else {
+        elOutCOver.textContent  = '–';
+        elOutCOver.className    = 'mc-result-value';
+      }
+
+      elOutCCopay.textContent  = copayAmt_c.toLocaleString('ko-KR') + '원';
+      elOutCPublic.textContent = publicAmt.toLocaleString('ko-KR') + '원';
+
+      /* 시급 기반 요양보호사 인건비 + 손익분기 시급 */
+      const H = (minKey / 60) * count;                      /* 월 케어시간 */
+      const hourly = parseFloat(elWageHourly.value);
+      const weekly = parseFloat(elWeeklyHoliday.value);
+      if (isNaN(hourly) || hourly < 0 || isNaN(weekly) || weekly < 0 || weekly > 100) return clearAll();
+      const totalRate = (rIns + rRet + rEtc) / 100;         /* 부대율 */
+      effWage = hourly * H * (1 + weekly / 100);            /* 월 지급액(주휴 포함) */
+      const beDenom = H * (1 + weekly / 100) * (1 + totalRate);
+      const beHourly = beDenom > 0 ? R / beDenom : null;    /* 손익분기 시급: M=0 되는 시급 */
+      elOutCHours.textContent = H.toFixed(1) + '시간';
+      elOutCBe.textContent = (beHourly !== null ? Math.round(beHourly).toLocaleString('ko-KR') + '원' : '–');
+      elOutCBe.className = 'mc-result-value mc-result-margin-val';
+    }
+
+    if (isNaN(effWage) || effWage <= 0) return clearAll();
+    if (isNaN(rIns) || isNaN(rRet) || isNaN(rEtc)) return clearAll();
+    if (rIns < 0 || rRet < 0 || rEtc < 0) return clearAll();
+
+    const ins  = effWage * (rIns / 100);
+    const ret  = effWage * (rRet / 100);
+    const etc  = effWage * (rEtc / 100);
+    const B    = ins + ret + etc;
+    const L    = effWage + B;
+    const M    = R - L;
+    const rate = R > 0 ? (M / R * 100) : null;
+
+    setAll(
+      Math.round(R), Math.round(effWage),
+      Math.round(ins), Math.round(ret), Math.round(etc),
+      Math.round(B), Math.round(L), Math.round(M), rate
+    );
+  }
+
+  /* ── 거시 수익 추정 (인건비지출비율 역산) ── */
+  let elMpLabor, elMpRatio, elMpOpex;
+  let elMpOutRevenue, elMpOutNonlabor, elMpOutNet, elMpOutRate;
+
+  function dashMacro() {
+    [elMpOutRevenue, elMpOutNonlabor, elMpOutRate].forEach(el => {
+      el.textContent = '–';
+      el.className = 'mc-result-value';
+    });
+    elMpOutNet.textContent = '–';
+    elMpOutNet.className = 'mc-result-value mc-result-margin-val';
+  }
+
+  /* 거시 역산: 매출 = 인건비 ÷ 인건비지출비율(방문요양 86.6%, 보건복지부고시 제2025-115호 제11조의2).
+     ※기관이 비율 하한대로 지출한다는 가정 — 실제 인건비 비율이 더 높으면 매출 과대추정(추정치). */
+  function calcMacro() {
+    const labor = parseFloat(elMpLabor.value);
+    const ratio = parseFloat(elMpRatio.value) / 100;
+    const opexRaw = parseFloat(elMpOpex.value);
+    const opexV = (isNaN(opexRaw) || opexRaw < 0) ? 0 : opexRaw;
+
+    if (isNaN(labor) || labor <= 0 || isNaN(ratio) || ratio <= 0 || ratio > 1) {
+      return dashMacro();
+    }
+
+    const revenue  = labor / ratio;
+    const nonLabor = revenue - labor;
+    const net      = nonLabor - opexV;
+    const rate     = net / revenue * 100;
+
+    elMpOutRevenue.textContent  = Math.round(revenue).toLocaleString('ko-KR') + '원';
+    elMpOutRevenue.className    = 'mc-result-value';
+    elMpOutNonlabor.textContent = Math.round(nonLabor).toLocaleString('ko-KR') + '원';
+    elMpOutNonlabor.className   = 'mc-result-value';
+
+    elMpOutNet.textContent = Math.round(net).toLocaleString('ko-KR') + '원';
+    elMpOutNet.className   = 'mc-result-value mc-result-margin-val ' +
+                             (net < 0 ? 'mc-negative' : 'mc-positive');
+
+    elMpOutRate.textContent = rate.toFixed(1) + '%';
+    elMpOutRate.className   = 'mc-result-value';
+  }
+
+  function toggleMode(val) {
+    elModeA.hidden = (val !== 'A');
+    elModeB.hidden = (val !== 'B');
+    elModeC.hidden = (val !== 'C');
+    elModeAWarn.hidden = true;
+    elCResultSection.hidden = (val !== 'C');
+    clearAll();
+    calc();
+  }
+
+  function init() {
+    const panel = document.getElementById('margin-panel');
+    if (!panel) return;
+
+    elMode          = panel.querySelectorAll('input[name="mc-mode"]');
+    elModeA         = document.getElementById('mc-mode-a');
+    elModeB         = document.getElementById('mc-mode-b');
+    elModeC         = document.getElementById('mc-mode-c');
+    elCopayRate     = document.getElementById('mc-copay-rate');
+    elCopayAmount   = document.getElementById('mc-copay-amount');
+    elRevenueDirect = document.getElementById('mc-revenue-direct');
+    elWage          = document.getElementById('mc-wage');
+    elRIns          = document.getElementById('mc-r-ins');
+    elRRet          = document.getElementById('mc-r-ret');
+    elREtc          = document.getElementById('mc-r-etc');
+    elModeAWarn     = document.getElementById('mc-mode-a-warn');
+    elGrade         = document.getElementById('mc-grade');
+    elVisitMin      = document.getElementById('mc-visit-min');
+    elVisitCount    = document.getElementById('mc-visit-count');
+    elCopayType     = document.getElementById('mc-copay-type');
+    elOutR          = document.getElementById('mc-out-r');
+    elOutW          = document.getElementById('mc-out-w');
+    elOutIns        = document.getElementById('mc-out-ins');
+    elOutRet        = document.getElementById('mc-out-ret');
+    elOutEtc        = document.getElementById('mc-out-etc');
+    elOutB          = document.getElementById('mc-out-b');
+    elOutL          = document.getElementById('mc-out-l');
+    elOutM          = document.getElementById('mc-out-m');
+    elOutRate       = document.getElementById('mc-out-rate');
+    elCResultSection = document.getElementById('mc-c-result');
+    elOutCRate      = document.getElementById('mc-out-c-rate');
+    elOutCLimit     = document.getElementById('mc-out-c-limit');
+    elOutCMonthly   = document.getElementById('mc-out-c-monthly');
+    elOutCOver      = document.getElementById('mc-out-c-over');
+    elOutCCopay     = document.getElementById('mc-out-c-copay');
+    elOutCPublic    = document.getElementById('mc-out-c-public');
+    elOutCHours     = document.getElementById('mc-out-c-hours');
+    elOutCBe        = document.getElementById('mc-out-c-be');
+    elWageHourly    = document.getElementById('mc-wage-hourly');
+    elWeeklyHoliday = document.getElementById('mc-weekly-holiday');
+    elWageManualRow = document.getElementById('mc-wage-manual-row');
+
+    /* 거시 수익 추정 DOM refs */
+    elMpLabor      = document.getElementById('mp-labor');
+    elMpRatio      = document.getElementById('mp-ratio');
+    elMpOpex       = document.getElementById('mp-opex');
+    elMpOutRevenue = document.getElementById('mp-out-revenue');
+    elMpOutNonlabor= document.getElementById('mp-out-nonlabor');
+    elMpOutNet     = document.getElementById('mp-out-net');
+    elMpOutRate    = document.getElementById('mp-out-rate');
+
+    /* 모드 라디오 전환 */
+    elMode.forEach(r => r.addEventListener('change', () => toggleMode(r.value)));
+
+    /* input 이벤트 위임 — 패널 내 모든 number/select 변경 시 즉시 재계산 */
+    panel.addEventListener('input', () => { calc(); calcMacro(); });
+
+    /* 초기 상태 정합(기본 모드 C의 보조출력 영역 노출) */
+    calc();
+    calcMacro();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  return {};
+})();
+
+</script>
+
+<script>
+/* 2열 래핑 — 입력과 결과를 각각 한 덩어리로 묶는다.
+   노드를 이동만 하므로 MarginCalc가 init에서 잡아둔 요소 참조는 그대로 살아 있다. */
+(function(){
+  'use strict';
+  var body = document.querySelector('.mc-body');
+  if (!body || body.querySelector('.mc-col-left')) return;
+
+  var RIGHT = ['mc-c-result', 'mc-result', 'mp-result'];
+  var left  = document.createElement('div');
+  var right = document.createElement('div');
+  left.className  = 'mc-col-left';
+  right.className = 'mc-col-right';
+
+  var modeRow = body.querySelector('.mc-mode-row');
+  Array.prototype.slice.call(body.children).forEach(function(el){
+    if (el === modeRow) return;              /* 모드 선택은 전폭 유지 */
+    (RIGHT.indexOf(el.id) >= 0 ? right : left).appendChild(el);
+  });
+  body.appendChild(left);
+  body.appendChild(right);
+})();
+
+/* 매출 구성 스택 바 — 계산 로직에 관여하지 않는다.
+   기존 결과 DOM(#mc-out-r/w/b/m)의 텍스트를 읽어 폭만 반영한다. */
+(function(){
+  'use strict';
+  var ids = ['mc-out-r','mc-out-w','mc-out-b','mc-out-m'];
+  var bar = {
+    w: document.getElementById('mcbar-w'),
+    b: document.getElementById('mcbar-b'),
+    m: document.getElementById('mcbar-m'),
+    track: document.getElementById('mcbar-track'),
+    empty: document.getElementById('mcbar-empty'),
+    lgM: document.getElementById('mcbar-lg-m')
+  };
+  if (!bar.track) return;
+
+  function num(id){
+    var el = document.getElementById(id);
+    if (!el) return NaN;
+    var t = (el.textContent || '').replace(/[^0-9.-]/g, '');
+    return t === '' ? NaN : parseFloat(t);
+  }
+  function pct(v, total){ return total > 0 ? Math.max(0, v / total * 100) : 0; }
+  function label(el, text, widthPct){
+    el.textContent = widthPct >= 12 ? text : '';
+  }
+
+  function render(){
+    var R = num('mc-out-r'), W = num('mc-out-w'), B = num('mc-out-b'), M = num('mc-out-m');
+    var ok = [R,W,B].every(function(v){ return !isNaN(v); }) && R > 0;
+
+    if (!ok) {
+      bar.track.style.display = 'none';
+      bar.empty.style.display = '';
+      bar.track.parentNode.querySelector('.mcbar-legend').style.display = 'none';
+      return;
+    }
+    bar.track.style.display = '';
+    bar.empty.style.display = 'none';
+    bar.track.parentNode.querySelector('.mcbar-legend').style.display = '';
+
+    var neg = !isNaN(M) && M < 0;
+    /* 마진이 음수면 인건비가 매출을 넘는다 → 인건비 총액을 100% 기준으로 잡아
+       초과분을 붉게 표시한다(막대가 잘려 나가지 않도록). */
+    var base = neg ? (W + B) : R;
+    var wP = pct(W, base), bP = pct(B, base);
+    var mP = neg ? pct(Math.abs(M), base) : pct(M, base);
+
+    bar.w.style.width = wP + '%';
+    bar.b.style.width = bP + '%';
+    bar.m.style.width = mP + '%';
+    bar.m.classList.toggle('is-neg', neg);
+
+    label(bar.w, '직접급여 ' + Math.round(wP) + '%', wP);
+    label(bar.b, '부대 ' + Math.round(bP) + '%', bP);
+    label(bar.m, (neg ? '초과 ' : '마진 ') + Math.round(mP) + '%', mP);
+
+    bar.lgM.lastChild.textContent = neg ? '적자 초과분' : '마진';
+    bar.lgM.querySelector('i').style.background = neg ? '#a8503f' : '#93702f';
+    bar.track.setAttribute('aria-label',
+      neg ? '인건비가 매출을 초과합니다' :
+      '매출 구성 — 직접급여 ' + Math.round(wP) + '%, 부대인건비 ' + Math.round(bP) + '%, 마진 ' + Math.round(mP) + '%');
+  }
+
+  /* 결과 셀이 바뀔 때마다 다시 그린다 */
+  var mo = new MutationObserver(render);
+  ids.forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) mo.observe(el, { childList:true, characterData:true, subtree:true });
+  });
+  render();
+})();
+</script>
+
+<div class="pub-fold"><details><summary>근거 · 주의사항 · 개인정보 처리</summary>
+<footer class="pub-footer">
+  <h3>계산 근거 · 출처</h3>
+  <ul>
+    <li><b>2026년 방문요양 수가 · 등급별 월한도액</b> — 보건복지부 「제6차 장기요양위원회」 보도자료(2025.11.4) 붙임2 «2026년 급여유형별 장기요양수가»</li>
+    <li><b>본인부담율</b> (일반 15% / 40%경감 9% / 60%경감 6% / 기초수급 0%) — 노인장기요양보험법 시행령 제15조의8</li>
+    <li><b>한도초과분 전액 본인부담</b> — 장기요양 급여비용 고시 제13조 제6항</li>
+    <li><b>인건비지출비율 86.6% (방문요양)</b> — 보건복지부고시 제2025-115호 제11조의2
+      <span class="warn">※ 공식 원문 직접 대조 미완 · 3자 인용값이므로 화면에서 수정해 사용하십시오</span></li>
+  </ul>
+
+  <h3>면책</h3>
+  <p>본 계산기는 <b>참고용 추정 도구</b>입니다. 실제 청구·정산 금액은 수급자별 급여 이용내역, 가산·감산 항목,
+     기관의 운영 조건에 따라 달라집니다. 회계·세무·법률 자문이 아니며, 결과에 근거한 의사결정의 책임은 이용자에게 있습니다.
+     수가와 고시는 개정될 수 있으므로 <b>반드시 최신 원문을 확인</b>하십시오.</p>
+
+  <h3>개인정보 · 동작 방식</h3>
+  <p>입력값은 <b>브라우저 안에서만 계산</b>됩니다. 서버 전송·저장·수집이 없고,
+     페이지를 닫으면 사라집니다. 파일 하나로 동작하므로 <b>인터넷 연결 없이</b>도 사용할 수 있습니다.</p>
+
+  <p class="pub-meta">2026년 수가 기준 · 방문요양(재가) 대상 · 만든 사람 김영욱</p>
+</footer>
+</details></div>
+
+</body>
+</html>
